@@ -8,7 +8,7 @@ PF-Meetup
 
 ## 自己紹介
 
-本田 雄亮（Honda Yusuke）
+## 本田 雄亮（Honda Yusuke）
 
 - プラットフォーム事業本部 所属
 - 2019年 新卒入社
@@ -25,3 +25,85 @@ DMM社内のGo活用事例を紹介
 .link https://inside.dmm.com/entry/2020/02/03/dmmgo-2 第2回目
 
 .image images/dmmgo_logo.png
+
+## 話すこと
+
+今日は、私が所属するPointClubチームで最も意識していることを主題に置き、\
+**中のエンジニアとして何ができるのか、実際どう動いているのか**を話します。
+
+## 開発体制とマインド
+
+## PointClubチーム
+
+- 開発スタイル：アジャイル
+- チームメンバー：13名ほど
+  - バックエンド：6名
+  - ネイティブ，プロダクトデザイナー，グロース/マーケティング など
+
+<br>
+TODO: 画像もう一枚いれる
+
+.image images/201130_pf-meetup/pointclub.png
+
+## 事業をなくさないためのエンジニアリング
+
+DMM.comではすごいスピードで事業が立ち上がっていく
+
+.image images/201130_pf-meetup/leadtime.png _ 700
+
+弊チームPOの石垣がiOSDCで発表
+
+.link https://speakerdeck.com/i35_267/organizational-structure-to-maximize-the-development-process 組織構造の力学を操作して、アプリ開発プロセスを最大化させる
+
+## エンジニアとしてできること
+
+**スピード感ある開発**
+
+- 手戻りをなくす
+- 人はなにもしない
+- 事業の理解
+
+100%は無理でも最大限頑張る。チームで💪
+
+## 手戻りをなくす
+
+## 手戻り＝だいたい認識差異
+
+手戻りはたいていの場合、認識の差異から生まれる
+- 仕様と違う（偉い人↔エンジニアの認識差異）
+- 必要な情報がAPIレスポンスに含まれていない<br>（クライアント↔バックエンドの認識差異）
+  - と思ったら、使っている単語が違うだけでちゃんと渡してたり…
+
+<br>
+
+↑こうなると、また話し合いの場が必要になる
+
+一発でばしっと決められると嬉しい
+
+## PO↔エンジニアの認識差異
+
+チームとしての方向性の合わせ方はこちらをご覧ください↓
+
+.image images/201130_pf-meetup/organizational_structure_to_maximize_the_development.png _ 760
+
+.link https://speakerdeck.com/i35_267/organizational-structure-to-maximize-the-development-process 組織構造の力学を操作して、アプリ開発プロセスを最大化させる
+
+## クライアント↔バックエンドの認識差異
+
+**APIインターフェースをみんなでレビュー**
+
+TODO:
+- swagger用意
+- s3でホスティングしてみんな見れる
+- PR出した内容もS3経由で参照可能
+- designの変更はネイティブとバックエンドでレビュー
+
+
+## リリース作業の自動化
+
+## テーブル定義のドキュメント生成を自動化
+
+
+## メモ
+
+https://www.timakin.com/posts/hacker-and-suits
