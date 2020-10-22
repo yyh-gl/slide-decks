@@ -15,7 +15,7 @@ PF-Meetup
 - Twitter: @yyh-gl
 - DMM.go運営
 
-.image images/logo.jpg _ 336
+.image ./images/logo.jpg _ 336
 
 ## DMM.go
 
@@ -24,7 +24,7 @@ DMM社内のGo活用事例を紹介
 .link https://inside.dmm.com/entry/2020/02/03/dmmgo-1 第1回目
 .link https://inside.dmm.com/entry/2020/02/03/dmmgo-2 第2回目
 
-.image images/dmmgo_logo.png
+.image ./images/dmmgo_logo.png
 
 ## 話すこと
 
@@ -43,13 +43,13 @@ DMM社内のGo活用事例を紹介
 <br>
 TODO: 画像もう一枚いれる
 
-.image images/201130_pf-meetup/pointclub.png
+.image ./images/201130_pf-meetup/pointclub.png
 
 ## 事業をなくさないためのエンジニアリング
 
 DMM.comではすごいスピードで事業が立ち上がっていく
 
-.image images/201130_pf-meetup/leadtime.png _ 700
+.image ./images/201130_pf-meetup/leadtime.png _ 700
 
 弊チームPOの石垣がiOSDCで発表
 
@@ -84,7 +84,7 @@ DMM.comではすごいスピードで事業が立ち上がっていく
 
 チームとしての方向性の合わせ方はこちらをご覧ください↓
 
-.image images/201130_pf-meetup/organizational_structure_to_maximize_the_development.png _ 760
+.image ./images/201130_pf-meetup/organizational_structure_to_maximize_the_development.png _ 760
 
 .link https://speakerdeck.com/i35_267/organizational-structure-to-maximize-the-development-process 組織構造の力学を操作して、アプリ開発プロセスを最大化させる
 
