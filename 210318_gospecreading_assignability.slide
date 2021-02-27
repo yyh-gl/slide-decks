@@ -1,0 +1,142 @@
+# Assignability
+
+yyh-gl
+
+2021年3月18日
+入門Go言語仕様輪読会
+
+## 自己紹介
+
+## yyh-gl（Honda, Yusuke）
+
+普段はDMM.comでGoを書いています
+
+Go言語仕様書輪読会で学んだことを記事にしたのでよければどうぞ
+
+.link https://yyh-gl.github.io/tech-blog/blog/uncredible-codes-from-go-spec/ The Go Programming Language Specificationで知った「こんなことできるだ」を紹介
+
+.image ./images/logo.png _ 300
+
+Twitter: [@yyh_gl](https://twitter.com/yyh_gl)
+
+
+## 今日話すこと
+
+GoのAssignabilityについて解説します
+
+1. Assignabilityとは
+1. Assignableな条件を知る
+1. まとめ
+
+<br>
+
+.link https://golang.org/ref/spec#Assignability Go言語仕様書『Assignability』
+
+
+## Assignabilityとは
+
+## Assignability = 代入可能性
+
+ある値が変数に代入可能かどうかを決めるルール
+
+<br>
+
+.image ./images/210318_gospecreading_assignability/overview.png _ 700
+
+<br>
+
+Goには6個のルールが存在
+
+
+## Assignableな条件を知る
+
+## どういうときにAssignableなのか
+
+値xについて、次に紹介する6個のルールのうち、ひとつでも該当していれば、<br>
+値xは型Tの変数に代入可能（Assignable）であると言える
+
+.image ./images/210318_gospecreading_assignability/base-rule.png _ 700
+
+## ルール1
+
+値xの型が型Tと同じである
+
+.play ./examples/210318_gospecreading_assignability/rule1.go
+
+
+## ルール2 
+
+型Tと値xの型Vが同じunderlying typeを持つ<br>
+　&& 型Tまたは型Vのいずれかがdefined typeでない
+
+.play ./examples/210318_gospecreading_assignability/rule2.go
+
+.link https://docs.google.com/presentation/d/1JUiZ-SdXbFvi8_hJZ-ouJbDdEJGT-op827O7V7HUAWU/edit#slide=id.p underlying typeについて by. DQNEOさん
+.link https://docs.google.com/presentation/d/1JSsrv404ZDJSnxp4UcJ3iVYDJAiT3RyETMe9AvbkxuY/edit#slide=id.gbb52947b14_0_62 defined typeについて by. Nobishiiさん
+
+## ルール3
+
+型Tはインターフェースであり、値xがインターフェースTを満たしている
+
+.play ./examples/210318_gospecreading_assignability/rule3.go
+
+
+## ルール4
+
+値xは双方向チャネルであり、型Tはchannel typeである<br>
+　&& 型Tおよび値xの型Vが持つ要素の型が同じである<br>
+　&& 型Tまたは型Vのいずれかがdefined typeでない
+
+.play ./examples/210318_gospecreading_assignability/rule4.go
+
+
+## ルール5
+
+値xはnil（事前定義された識別子）であり、<br>
+型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
+
+.play ./examples/210318_gospecreading_assignability/rule5.go
+
+## ルール6
+
+値xは型Tの値によって表現可能な型無し定数（untyped constant）である
+
+・<br>
+・<br>
+・<br>
+
+型無し定数とは？？
+
+.image ./images/210318_gospecreading_assignability/question.png _ 300
+
+## 型無し定数とは（寄り道）
+
+下記コードにおける定数`num`は型を宣言していないため「型無し定数」と呼ばれる
+
+.play ./examples/210318_gospecreading_assignability/untyped_constant.go
+
+型無し定数は処理の中で型情報が付与されることがある（暗黙的な変換）<br>
+→『Operators』の章に暗黙的な変換について言及があります
+
+.link https://golang.org/ref/spec#Operators Go言語仕様書『Operators』
+
+
+## ルール6
+
+値xは型Tの値によって表現可能な型無し定数（untyped constant）である
+
+.play ./examples/210318_gospecreading_assignability/rule6.go
+
+
+## まとめ
+
+## Assignableな条件
+
+下記のどれかひとつにでも該当したら代入可能である
+
+1. 値xの型が型Tと同じである
+2. 型Tと値xの型Vが同じunderlying typeを持つ && 型Tまたは型Vのいずれかがdefined typeでない
+3. 型Tはインターフェースであり、値xがインターフェースTを満たしている
+4. 値xは双方向チャネルであり、型Tはchannel typeである && 型Tおよび値xの型Vが持つ要素の型が同じである && 型Tまたは型Vのいずれかがdefined typeでない
+5. 値xはnil（事前定義された識別子）であり、型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
+6. 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
