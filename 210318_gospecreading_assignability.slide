@@ -37,7 +37,7 @@ GoのAssignabilityについて解説します
 
 ## Assignability = 代入可能性
 
-ある値が変数に代入可能かどうかを決めるルール
+ある値が変数に代入可能かどうかを決める条件郡
 
 <br>
 
@@ -45,26 +45,26 @@ GoのAssignabilityについて解説します
 
 <br>
 
-Goには6個のルールが存在
+Goには6個の条件が存在
 
 
 ## Assignableな条件を知る
 
 ## どういうときにAssignableなのか
 
-値xについて、次に紹介する6個のルールのうち、ひとつでも該当していれば、<br>
+値xについて、次に紹介する6個の条件のうち、ひとつでも該当していれば、<br>
 値xは型Tの変数に代入可能（Assignable）であると言える
 
 .image ./images/210318_gospecreading_assignability/base-rule.png _ 700
 
-## ルール1
+## 条件1
 
 値xの型が型Tと同じである
 
 .play ./examples/210318_gospecreading_assignability/rule1.go
 
 
-## ルール2 
+## 条件2 
 
 型Tと値xの型Vが同じunderlying typeを持つ<br>
 　&& 型Tまたは型Vのいずれかがdefined typeでない
@@ -74,14 +74,14 @@ Goには6個のルールが存在
 .link https://docs.google.com/presentation/d/1JUiZ-SdXbFvi8_hJZ-ouJbDdEJGT-op827O7V7HUAWU/edit#slide=id.p underlying typeについて by. DQNEOさん
 .link https://docs.google.com/presentation/d/1JSsrv404ZDJSnxp4UcJ3iVYDJAiT3RyETMe9AvbkxuY/edit#slide=id.gbb52947b14_0_62 defined typeについて by. Nobishiiさん
 
-## ルール3
+## 条件3
 
 型Tはインターフェースであり、値xがインターフェースTを満たしている
 
 .play ./examples/210318_gospecreading_assignability/rule3.go
 
 
-## ルール4
+## 条件4
 
 値xは双方向チャネルであり、型Tはchannel typeである<br>
 　&& 型Tおよび値xの型Vが持つ要素の型が同じである<br>
@@ -90,14 +90,21 @@ Goには6個のルールが存在
 .play ./examples/210318_gospecreading_assignability/rule4.go
 
 
-## ルール5
+## 条件5
 
-値xはnil（事前定義された識別子）であり、<br>
+値xは事前宣言された識別子としてのnilであり、<br>
 型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
 
-.play ./examples/210318_gospecreading_assignability/rule5.go
+.play ./examples/210318_gospecreading_assignability/rule5_1.go
 
-## ルール6
+## 条件5
+
+値xは事前宣言された識別子としてのnilでない場合は代入不可能である
+
+.play ./examples/210318_gospecreading_assignability/rule5_2.go
+
+
+## 条件6
 
 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
 
@@ -121,7 +128,7 @@ Goには6個のルールが存在
 .link https://golang.org/ref/spec#Operators Go言語仕様書『Operators』
 
 
-## ルール6
+## 条件6
 
 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
 

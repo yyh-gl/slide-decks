@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-type T chan int // Tはchannel type
+type T <-chan int // Tはchannel type
 
 func main() {
 	x1 := make(chan int, 1) // x1は要素の型がintの双方向チャネル
