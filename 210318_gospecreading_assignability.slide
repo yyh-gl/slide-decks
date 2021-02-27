@@ -61,7 +61,7 @@ Goには6個の条件が存在
 
 値xの型が型Tと同じである
 
-.play ./examples/210318_gospecreading_assignability/rule1.go
+.play ./examples/210318_gospecreading_assignability/condition1.go
 
 
 ## 条件2 
@@ -69,7 +69,7 @@ Goには6個の条件が存在
 型Tと値xの型Vが同じunderlying typeを持つ<br>
 　&& 型Tまたは型Vのいずれかがdefined typeでない
 
-.play ./examples/210318_gospecreading_assignability/rule2.go
+.play ./examples/210318_gospecreading_assignability/condition2.go
 
 .link https://docs.google.com/presentation/d/1JUiZ-SdXbFvi8_hJZ-ouJbDdEJGT-op827O7V7HUAWU/edit#slide=id.p underlying typeについて by. DQNEOさん
 .link https://docs.google.com/presentation/d/1JSsrv404ZDJSnxp4UcJ3iVYDJAiT3RyETMe9AvbkxuY/edit#slide=id.gbb52947b14_0_62 defined typeについて by. Nobishiiさん
@@ -78,7 +78,7 @@ Goには6個の条件が存在
 
 型Tはインターフェースであり、値xがインターフェースTを満たしている
 
-.play ./examples/210318_gospecreading_assignability/rule3.go
+.play ./examples/210318_gospecreading_assignability/condition3.go
 
 
 ## 条件4
@@ -87,7 +87,7 @@ Goには6個の条件が存在
 　&& 型Tおよび値xの型Vが持つ要素の型が同じである<br>
 　&& 型Tまたは型Vのいずれかがdefined typeでない
 
-.play ./examples/210318_gospecreading_assignability/rule4.go
+.play ./examples/210318_gospecreading_assignability/condition4.go
 
 
 ## 条件5
@@ -95,13 +95,13 @@ Goには6個の条件が存在
 値xは事前宣言された識別子としてのnilであり、<br>
 型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
 
-.play ./examples/210318_gospecreading_assignability/rule5_1.go
+.play ./examples/210318_gospecreading_assignability/condition5_1.go
 
 ## 条件5
 
 値xは事前宣言された識別子としてのnilでない場合は代入不可能である
 
-.play ./examples/210318_gospecreading_assignability/rule5_2.go
+.play ./examples/210318_gospecreading_assignability/condition5_2.go
 
 
 ## 条件6
@@ -132,7 +132,7 @@ Goには6個の条件が存在
 
 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
 
-.play ./examples/210318_gospecreading_assignability/rule6.go
+.play ./examples/210318_gospecreading_assignability/condition6.go
 
 
 ## まとめ
