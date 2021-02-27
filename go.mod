@@ -1,5 +1,5 @@
-module github.com/yyh-gl/deck
+module github.com/yyh-gl/slide-decks
 
-go 1.15
+go 1.16
 
-require golang.org/x/tools v0.0.0-20201017001424-6003fad69a88 // indirect
+require golang.org/x/tools v0.1.0 // indirect
