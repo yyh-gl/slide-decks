@@ -59,9 +59,11 @@ Goには6個の条件が存在
 
 ## 条件1
 
-値xの型が型Tと同じである
+値xの型が型Tとidenticalである<br>
 
 .play ./examples/210318_gospecreading_assignability/condition1.go
+
+.link hoge identicalに関するsyumaiさんの解説
 
 
 ## 条件2 
@@ -70,6 +72,12 @@ Goには6個の条件が存在
 　&& 型Tまたは型Vのいずれかがdefined typeでない
 
 .play ./examples/210318_gospecreading_assignability/condition2.go
+
+
+## 条件2
+
+underlying typeおよびdefined typeについては、<br>
+前回のDQNEOさんおよびNobishiiさんの資料を参考にしてください
 
 .link https://docs.google.com/presentation/d/1JUiZ-SdXbFvi8_hJZ-ouJbDdEJGT-op827O7V7HUAWU/edit#slide=id.p underlying typeについて by. DQNEOさん
 .link https://docs.google.com/presentation/d/1JSsrv404ZDJSnxp4UcJ3iVYDJAiT3RyETMe9AvbkxuY/edit#slide=id.gbb52947b14_0_62 defined typeについて by. Nobishiiさん
@@ -123,9 +131,9 @@ Goには6個の条件が存在
 .play ./examples/210318_gospecreading_assignability/untyped_constant.go
 
 型無し定数は処理の中で型情報が付与されることがある（暗黙的な変換）<br>
-→『Operators』の章に暗黙的な変換について言及があります
+→『Constants』の章に暗黙的な変換について言及があります
 
-.link https://golang.org/ref/spec#Operators Go言語仕様書『Operators』
+.link https://golang.org/ref/spec#Constants Go言語仕様書『Constants』
 
 
 ## 条件6
@@ -141,9 +149,9 @@ Goには6個の条件が存在
 
 下記のどれかひとつにでも該当したら代入可能である
 
-1. 値xの型が型Tと同じである
+1. 値xの型が型Tとidenticalである
 2. 型Tと値xの型Vが同じunderlying typeを持つ && 型Tまたは型Vのいずれかがdefined typeでない
 3. 型Tはインターフェースであり、値xがインターフェースTを満たしている
 4. 値xは双方向チャネルであり、型Tはchannel typeである && 型Tおよび値xの型Vが持つ要素の型が同じである && 型Tまたは型Vのいずれかがdefined typeでない
-5. 値xはnil（事前定義された識別子）であり、型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
+5. 値xは事前宣言された識別子としてのnilであり、型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
 6. 値xは型Tの値によって表現可能な型無し定数（untyped constant）である

@@ -4,12 +4,16 @@ import "fmt"
 
 const one int = 1
 
-type T int // Tのunderlying typeはint
+type (
+	T1 struct{ number int }
+	T2 int // T2のunderlying typeはint
+)
 
 func main() {
-	var t T = 1    // 1のunderlying typeはint && 1は型無し定数でありdefined typeではない
-	fmt.Println(t) // 1
+	// t1ののunderlying typeはstruct{ number int } && defined typeではないため代入可能である
+	var t1 T1 = struct{ number int }{number: 1}
+	fmt.Println(t1) // {1}
 
-	var y T = one // oneのunderlying typeはintだが、defined typeであるため代入不可能である
-	fmt.Println(y)
+	var t2 T2 = one // oneのunderlying typeはintだが、defined typeであるため代入不可能である
+	fmt.Println(t2)
 }
