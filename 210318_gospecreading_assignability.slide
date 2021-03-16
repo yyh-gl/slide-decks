@@ -1,13 +1,13 @@
-# Assignability
+Assignability
+入門Go言語仕様輪読会
+20:10 18 Mar 2021
 
 yyh-gl
+@yyh_gl
 
-2021年3月18日
-入門Go言語仕様輪読会
+* 自己紹介
 
-## 自己紹介
-
-## yyh-gl（Honda, Yusuke）
+* yyh-gl（Honda, Yusuke）
 
 普段はDMM.comでGoを書いています
 
@@ -17,141 +17,144 @@ Go言語仕様書輪読会で学んだことを記事にしたのでよければ
 
 .image ./images/profile.jpg _ 300
 
-Twitter: [@yyh_gl](https://twitter.com/yyh_gl)
+.link https://twitter.com/yyh_gl Twitter: @yyh_gl
 
 
-## 今日話すこと
+* 今日話すこと
 
 GoのAssignabilityについて解説します
 
 1. Assignabilityとは
-1. Assignableな条件を知る
-1. まとめ
-
-<br>
+2. Assignableな条件を知る
+3. まとめ
 
 .link https://golang.org/ref/spec#Assignability Go言語仕様書『Assignability』
 
 
-## Assignabilityとは
+* Assignabilityとは
 
-## Assignability = 代入可能性
+* Assignability = 代入可能性
 
 ある値が変数に代入可能かどうかを決める条件郡
 
-<br>
-
 .image ./images/210318_gospecreading_assignability/overview.png _ 700
-
-<br>
 
 Goには6個の条件が存在
 
 
-## Assignableな条件を知る
+* Assignableな条件を知る
 
-## どういうときにAssignableなのか
+* どういうときにAssignableなのか
 
-値xについて、次に紹介する6個の条件のうち、ひとつでも該当していれば、<br>
+値xについて、次に紹介する6個の条件のうち、ひとつでも該当していれば、
 値xは型Tの変数に代入可能（Assignable）であると言える
 
 .image ./images/210318_gospecreading_assignability/base-rule.png _ 700
 
-## 条件1
+* 条件1
 
-値xの型が型Tとidenticalである<br>
+値xの型が型Tとidenticalである
 
 .play ./examples/210318_gospecreading_assignability/condition1.go
 
 .link hoge identicalに関するsyumaiさんの解説
 
 
-## 条件2 
+* 条件2
 
-型Tと値xの型Vが同じunderlying typeを持つ<br>
-　&& 型Tまたは型Vのいずれかがdefined typeでない
+型Tと値xの型Vが同じunderlying typeを持つ
+&& 型Tまたは型Vのいずれかがdefined typeでない
 
 .play ./examples/210318_gospecreading_assignability/condition2.go
 
 
-## 条件2
+* 条件2
 
-underlying typeおよびdefined typeについては、<br>
+underlying typeおよびdefined typeについては、
 前回のDQNEOさんおよびNobishiiさんの資料を参考にしてください
 
 .link https://docs.google.com/presentation/d/1JUiZ-SdXbFvi8_hJZ-ouJbDdEJGT-op827O7V7HUAWU/edit#slide=id.p underlying typeについて by. DQNEOさん
 .link https://docs.google.com/presentation/d/1JSsrv404ZDJSnxp4UcJ3iVYDJAiT3RyETMe9AvbkxuY/edit#slide=id.gbb52947b14_0_62 defined typeについて by. Nobishiiさん
 
-## 条件3
+* 条件3
 
 型Tはインターフェースであり、値xがインターフェースTを満たしている
 
 .play ./examples/210318_gospecreading_assignability/condition3.go
 
 
-## 条件4
+* 条件4
 
-値xは双方向チャネルであり、型Tはchannel typeである<br>
-　&& 型Tおよび値xの型Vが持つ要素の型が同じである<br>
-　&& 型Tまたは型Vのいずれかがdefined typeでない
+値xは双方向チャネルであり、型Tはchannel typeである
+&& 型Tおよび値xの型Vが持つ要素の型が同じである
+&& 型Tまたは型Vのいずれかがdefined typeでない
 
 .play ./examples/210318_gospecreading_assignability/condition4.go
 
 
-## 条件5
+* 条件5
 
-値xは事前宣言された識別子としてのnilであり、<br>
+値xは事前宣言された識別子としてのnilであり、
 型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
 
 .play ./examples/210318_gospecreading_assignability/condition5_1.go
 
-## 条件5
+* 条件5
 
 値xは事前宣言された識別子としてのnilでない場合は代入不可能である
 
 .play ./examples/210318_gospecreading_assignability/condition5_2.go
 
 
-## 条件6
+* 条件6
 
 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
 
-・<br>
-・<br>
-・<br>
+・
+・
+・
 
 型無し定数とは？？
 
 .image ./images/210318_gospecreading_assignability/question.png _ 300
 
-## 型無し定数とは（寄り道）
+* 型無し定数とは（寄り道）
 
-下記コードにおける定数`num`は型を宣言していないため「型無し定数」と呼ばれる
+下記コードにおける定数 `num` は型を宣言していないため「型無し定数」と呼ばれる
 
 .play ./examples/210318_gospecreading_assignability/untyped_constant.go
 
-型無し定数は処理の中で型情報が付与されることがある（暗黙的な変換）<br>
+型無し定数は処理の中で型情報が付与されることがある（暗黙的な変換）
 →『Constants』の章に暗黙的な変換について言及があります
 
 .link https://golang.org/ref/spec#Constants Go言語仕様書『Constants』
 
 
-## 条件6
+* 条件6
 
 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
 
 .play ./examples/210318_gospecreading_assignability/condition6.go
 
 
-## まとめ
+* まとめ
 
-## Assignableな条件
+* Assignableな条件
 
 下記のどれかひとつにでも該当したら代入可能である
 
-1. 値xの型が型Tとidenticalである
-2. 型Tと値xの型Vが同じunderlying typeを持つ && 型Tまたは型Vのいずれかがdefined typeでない
-3. 型Tはインターフェースであり、値xがインターフェースTを満たしている
-4. 値xは双方向チャネルであり、型Tはchannel typeである && 型Tおよび値xの型Vが持つ要素の型が同じである && 型Tまたは型Vのいずれかがdefined typeでない
-5. 値xは事前宣言された識別子としてのnilであり、型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
-6. 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
+  1. 値xの型が型Tとidenticalである
+
+  2. 型Tと値xの型Vが同じunderlying typeを持つ
+     && 型Tまたは型Vのいずれかがdefined typeでない
+
+  3. 型Tはインターフェースであり、値xがインターフェースTを満たしている
+
+  4. 値xは双方向チャネルであり、型Tはchannel typeである
+     && 型Tおよび値xの型Vが持つ要素の型が同じである
+     && 型Tまたは型Vのいずれかがdefined typeでない
+
+  5. 値xは事前宣言された識別子としてのnilであり、
+     型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
+
+  6. 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
