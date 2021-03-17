@@ -11,5 +11,4 @@ func main() {
 
 	x2 := make(chan string, 1) // x2は要素の型がstringの双方向チャネル
 	var t2 T = x2              // t2およびx2の要素の型が異なるので代入不可能である
-	fmt.Println(t2)
 }

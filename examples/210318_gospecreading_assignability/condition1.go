@@ -8,6 +8,5 @@ func main() {
 	fmt.Println(t1) // 1
 
 	var y string = "yyy"
-	var t2 int = y // t1とxの型が異なるのでエラー
-	fmt.Println(t2)
+	var t2 int = y // t2とyの型が異なるのでエラー
 }

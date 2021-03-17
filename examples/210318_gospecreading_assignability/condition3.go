@@ -15,5 +15,4 @@ func main() {
 	fmt.Println(t1) // 1
 
 	var t2 T2 = x // xはインターフェースT2を満たしていないので代入不可能である
-	fmt.Println(t2)
 }
