@@ -158,3 +158,10 @@ underlying typeおよびdefined typeについては、
      型Tはポインタまたは関数, スライス, マップ, チャネル, インターフェースのどれかである
 
   6. 値xは型Tの値によって表現可能な型無し定数（untyped constant）である
+
+* 謝辞
+
+本スライドの作成にあたり、
+多くのコメントをくださったNobishiiさん、DQNEOさんありがとうございました。
+
+.image ./images/210318_gospecreading_assignability/review.png _ 900
