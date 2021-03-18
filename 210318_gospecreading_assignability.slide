@@ -35,7 +35,7 @@ GoのAssignabilityについて解説します
 
 * Assignability = 代入可能性
 
-ある値が変数に代入可能かどうかを決める条件郡
+ある値が変数に代入可能かどうかを決める条件群
 
 .image ./images/210318_gospecreading_assignability/overview.png _ 700
 
