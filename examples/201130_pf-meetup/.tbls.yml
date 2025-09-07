@@ -1,2 +1,0 @@
-dsn: mysql://root:mysql@localhost:3306/pointclub
-docPath: /tmp/dbdoc
