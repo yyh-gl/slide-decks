@@ -21,9 +21,9 @@ commands:
   run: 'mmdc -i - -o "{{output}}" --quiet'
   ext: png
 - lang: '{kotlin,go,rust,python,java,javascript,typescript}'
-  run: 'silicon -l "{{lang}}" --background "#ffffff" --no-window-controls --pad-horiz 0 --pad-vert 0 -o "{{output}}"'
+  run: 'silicon -l "{{lang}}" --theme "Visual Studio Dark+" --background "#ffffff" --no-window-controls --pad-horiz 0 --pad-vert 0 -o "{{output}}"'
 - lang: '{ebnf}'
-  run: 'silicon -l "go" --background "#ffffff" --no-window-controls --pad-horiz 0 --pad-vert 0 -o "{{output}}"'
+  run: 'silicon -l "go" --theme "Visual Studio Dark+" --background "#ffffff" --no-window-controls --pad-horiz 0 --pad-vert 0 -o "{{output}}"'
   ext: png
 - lang: '*'
   run: ['convert', '-background', 'white', '-fill', 'black', 'label:{{input}}', '{{output}}']
