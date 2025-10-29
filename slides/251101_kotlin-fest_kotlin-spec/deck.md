@@ -65,6 +65,7 @@ LINE Digital Frontier株式会社
 
 ![Image](images/linemanga_logo.png)
 ![Image](images/linemanga_dl.png)
+![Image](images/corp_qr.png)
 
 <!-- https://ldfcorp.com/ -->
 
@@ -90,7 +91,7 @@ LINE Digital Frontier株式会社
 貴重なアドバイスをいただいたJetBrains社のMarat Akhin氏、
 ならびに発表練習にお付き合いいただいたLINE Digital Frontier社の
 同僚の皆様に心より感謝申し上げます。
-（犬の絵を描いてくれた妻にも）
+（犬の絵を描いてくれた妻にも）<br>
 
 I would like to thank Marat Akhin of JetBrains for his valuable advice
 for this presentation and my colleagues at LINE Digital Frontier
@@ -137,8 +138,7 @@ for their support with the presentation practice.
 
 Kotlin Language Specification（Kotlin言語仕様書）は[Kotlinの公式サイト](https://kotlinlang.org/)で
 公開されている。
-→ [https://kotlinlang.org/spec](https://kotlinlang.org/spec)
-<br>
+→ [https://kotlinlang.org/spec](https://kotlinlang.org/spec)<br>
 
 内容はGitHubで管理されている。
 仕様策定から修正提案まで、誰でも参加可能。
@@ -371,7 +371,7 @@ expression
 
 ---
 
-<!-- {"layout": "title-and-body-without-dog"} -->
+<!-- {"layout": "title-and-body"} -->
 
 # for文の表記法を読み解く
 
@@ -431,7 +431,7 @@ for
 
 # EBNFベースの表記法
 
-EBNFは慣れないと読みづらい。
+EBNFは慣れないと読みづらい。<br>
 
 とはいえ、生成AIを使えばEBNFベースの表記法をコードに高精度で
 変換してくれる。
@@ -496,8 +496,7 @@ Kotlin言語仕様書は
 - EBNFベースの表記法により文法を定義
 - 数学的表現を使って仕様を説明
 
-難しい内容もあるが、生成AIや他の公式ドキュメントが理解を助けてくれる。
-<br>
+難しい内容もあるが、生成AIや他の公式ドキュメントが理解を助けてくれる。<br>
 
 次ページからは、EBNFベースの表記法や数学的表現を読み解くことで
 どういった知識を得ることができるのか紹介&解説。
@@ -744,14 +743,14 @@ F₁はF₂と同等またはそれ以上に具体的な関数であると判断
 # オーバーロード候補を絞り込む追加の手順
 
 - **「1. F₁はF₂よりも具体的な関数である」場合：**
-  - 2つの候補に関して、より具体的な関数が見つかったので追加の手順はない
+  - 2つの候補に関して、より具体的な関数が見つかったので追加の手順はない<br>
 - **「2. F₁もF₂も他方より具体的な関数ではない」場合：**
-  - 型パラメータを持たない関数の方がより具体的であると判断
+  - 型パラメータを持たない関数の方がより具体的であると判断<br>
 - **「3. F₁もF₂も他方より具体的な関数である」場合：**
   - 型パラメータを持たない関数の方がより具体的であると判断
   - 各候補について関数呼び出し時にデフォルト引数が使われている数をカウントし
     カウント数が少ない候補をより具体的であると判断
-  - 可変長引数を持たない候補はより具体的であると判断
+  - 可変長引数を持たない候補はより具体的であると判断<br>
 - **それでも最終候補が決まらない場合：**
   - ラムダ式の戻り値型を使用して絞り込む
   - それでも最終候補が決まらなければ「オーバーロードの曖昧性」として<br>コンパイルエラーとする
@@ -775,7 +774,7 @@ fun <K> Any.func(arg0: String, arg1: Number, arg2: K) {
 true.func("Kotlin Fest", 2, 5)
 ```
 
-<!-- https://pl.kotl.in/tBAYsvSt- -->
+<!-- https://pl.kotl.in/di2eUOn6S -->
 
 ---
 
@@ -881,7 +880,7 @@ fun <T> func(arg0: T, arg1: String) {
 func("Kotlin", "Fest")
 ```
 
-<!-- https://pl.kotl.in/e-wISG49K -->
+<!-- https://pl.kotl.in/vFUsAQpV7 -->
 
 ---
 
@@ -986,7 +985,7 @@ fun func(arg0: String, arg1: Int = 42) {
 func("Kotlin Fest")
 ```
 
-<!-- https://pl.kotl.in/P1I6FN9x- -->
+<!-- https://pl.kotl.in/IGzW28bWq -->
 
 ---
 
@@ -1206,11 +1205,11 @@ println((Double.NaN as Any) == (Double.NaN as Any)) // true
 
 本発表を聞いて「こんなことできたんだ」「こういう挙動だったんだ」など
 新しい発見はあったでしょうか？
-みなさんの新しい発見に繋がっていれば幸いです。
+みなさんの新しい発見に繋がっていれば幸いです。<br>
 
 正直なところ言語仕様を知らなくてもコードは書けます。
 しかし、知っているとプラスに働く要素があることは確かです。
-なにより知識探求はおもしろいですよね。
+なにより知識探求はおもしろいですよね。<br>
 
 本発表をきっかけに、みなさんも言語仕様書を読んでみようと
 思ってもらえたならとても嬉しいです。
