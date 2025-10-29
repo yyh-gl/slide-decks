@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "lint": "npx textlint ./slides/**/deck.md"
+  },
+  "devDependencies": {
+    "textlint": "^15.2.3",
+    "textlint-filter-rule-comments": "^1.2.2",
+    "textlint-rule-preset-ja-technical-writing": "^12.0.2"
+  }
+}
