@@ -61,7 +61,9 @@ LINE Digital Frontier株式会社
 『LINEマンガ』を開発しています📚️
 
 みなさまのおかげで5500万DLを突破！
-2025年上半期には、日本のすべてのアプリのなかで収益ランキング1位を達成🥇
+
+2025年 第1四半期および第2四半期は
+日本のすべてのアプリのなかで収益ランキング1位を達成🥇
 
 ![Image](images/linemanga_logo.png)
 ![Image](images/linemanga_dl.png)
@@ -473,8 +475,8 @@ EBNFは慣れないと読みづらい。<br>
 
 # サポートドキュメント
 
-一部の仕様については[Kotlinの公式サイト](https://kotlinlang.org/docs/home.html)でも説明している。
-[Kotlinの公式サイト](https://kotlinlang.org/docs/home.html)の方が初心者にもわかりやすい内容になっている。
+一部の仕様については[Kotlin公式サイト](https://kotlinlang.org/docs/home.html)の他ドキュメントでも説明している。
+これらのドキュメントの方が初心者にもわかりやすい内容になっている。
 あわせて読むと理解が捗る。
 
 ![Image](images/kotlin_web_docs_generics.png)
@@ -701,19 +703,22 @@ funcWithString(stringVal)             // OK
 
 見方を変えると、関数間の転送が可能かどうかを見ているイメージ。
 
-`funcWithString`関数は実行可能だが、`funcWithCharSequence`関数は
-実行できない。
-よって、`funcWithString`関数の方が具体的である。
+`funcWithString`関数は`funcWithCharSequence`関数に転送できるが
+逆はできない。
+このような状況における`funcWithString`関数をより具体的であると判断。
 
 ```kotlin
 fun funcWithCharSequence(value: CharSequence) {
-    funcWithString(value)
+    funcWithString(value) // Error: cannot forward
 }
 
 fun funcWithString(value: String) {
-    funcWithCharSequence(value)
+    funcWithCharSequence(value) // OK: can forward
 }
 ```
+
+<!-- https://kotlinlang.org/spec/overload-resolution.html#rationale-1 -->
+<!-- https://pl.kotl.in/I4vOMCqAk -->
 
 ---
 
@@ -804,8 +809,8 @@ F₁およびF₂について構築される制約
 - 🙆‍♂️ Boolean <: Any
 - 🙆‍♂️ String <: String
 - 🙆‍♂️ Int <: Number
-- 🙆‍♂️ T <: K                           ▶ 制約の検証結果：**すべての制約を満たせる**
-- 🙆‍♂️ T <: Comparable\<T\>          （`K`は`Any`とみなすことができる）
+- 🙆‍♂️ T <: K
+- 🙆‍♂️ T <: Comparable\<T\>    ▶ 制約の検証結果：**すべての制約を満たせる**
 
 ```kotlin
 // F1
@@ -1248,7 +1253,6 @@ functionWithReceiver(10, "Hello")    // No error !?
 <!-- {"layout": "eye-catch"} -->
 
 # 🐾 補足資料 🐾
-
 
 ---
 
