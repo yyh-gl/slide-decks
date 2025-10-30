@@ -459,7 +459,7 @@ EBNFは慣れないと読みづらい。<br>
 
 - `∀`（全称記号）
   - 「すべての」という意味
-  - e.g. `∀x:x²>1` は「すべてのxについて`x²>1`が成り立つ」という意味
+  - e.g. `∀x:P(x)` は「すべての`x`について`P(x)`が真である」という意味
 - `∃`（存在記号）
   - 「少なくともひとつは存在する」という意味
   - e.g. `∃x:x²=4` は「`x²=4`が成り立つxが少なくともひとつは存在する」という意味
@@ -1152,7 +1152,7 @@ println(nullVal!!!!!!!!?.length) // 6
 浮動小数点型（`Float`および`Double`）として比較するときと
 `Any`型として比較するときでは`==`演算子の挙動が異なる。
 
-浮動小数点型の場合は[IEEE 754](ttps://ieeexplore.ieee.org/document/8766229)に準拠した比較が行われる。
+浮動小数点型の場合は[IEEE 754](https://ieeexplore.ieee.org/document/8766229)に準拠した比較が行われる。
 
 ```kotlin
 // Compare values of floating point arithmetic types
