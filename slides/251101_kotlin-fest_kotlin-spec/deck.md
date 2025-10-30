@@ -697,6 +697,26 @@ funcWithString(stringVal)             // OK
 
 ---
 
+# 最も具体的な関数の選択
+
+見方を変えると、関数間の転送が可能かどうかを見ているイメージ。
+
+`funcWithString`関数は実行可能だが、`funcWithCharSequence`関数は
+実行できない。
+よって、`funcWithString`関数の方が具体的である。
+
+```kotlin
+fun funcWithCharSequence(value: CharSequence) {
+    funcWithString(value)
+}
+
+fun funcWithString(value: String) {
+    funcWithCharSequence(value)
+}
+```
+
+---
+
 # 言語仕様書視点の「最も具体的な関数の選択」
 
 関数の具体性チェックは型制約を使用して行う。
@@ -858,7 +878,7 @@ fun <K> Any.func(arg0: String, arg1: Number, arg2: K) {
     println("F2")
 }
 // Call site
-true.func("Kotlin Fest", 2, 5)
+true.func("Kotlin Fest", 2, 5) // F1
 ```
 
 ---
@@ -963,7 +983,7 @@ fun <T> func(arg0: T, arg1: String) {
     println("F2")
 }
 // Call site
-func("Kotlin", "Fest")
+func("Kotlin", "Fest") // F1
 ```
 
 ---
@@ -1082,7 +1102,7 @@ fun func(arg0: String, arg1: Int = 42) {
 }
 
 // Call site
-func("Kotlin Fest")
+func("Kotlin Fest") // F1
 ```
 
 ---
@@ -1127,6 +1147,29 @@ println(nullVal!!!!!!!!?.length) // 6
 
 ---
 
+# Value equality expressions
+
+浮動小数点型（`Float`および`Double`）として比較するときと
+`Any`型として比較するときでは`==`演算子の挙動が異なる。
+
+浮動小数点型の場合は[IEEE 754](ttps://ieeexplore.ieee.org/document/8766229)に準拠した比較が行われる。
+
+```kotlin
+// Compare values of floating point arithmetic types
+println(Float.NaN == Float.NaN)   // false
+println(Double.NaN == Double.NaN) // false
+
+// Compare values of Any types
+println((Float.NaN as Any) == (Float.NaN as Any))   // true
+println((Double.NaN as Any) == (Double.NaN as Any)) // true
+```
+
+<!-- https://kotlinlang.org/spec/expressions.html#value-equality-expressions -->
+<!-- https://kotlinlang.org/spec/overload-resolution.html#infix-function-call -->
+<!-- https://pl.kotl.in/5YfLQ2WXv -->
+
+---
+
 # Function types
 
 次のサンプルコードはエラーなく実行可能。
@@ -1154,29 +1197,6 @@ functionWithReceiver(10, "Hello")    // No error !?
 
 <!-- https://kotlinlang.org/spec/type-system.html#function-types -->
 <!-- https://pl.kotl.in/LS1cRcnwM -->
-
----
-
-# Value equality expressions
-
-浮動小数点型（`Float`および`Double`）として比較するときと
-`Any`型として比較するときでは`==`演算子の挙動が異なる。
-
-浮動小数点型の場合は[IEEE 754](ttps://ieeexplore.ieee.org/document/8766229)に準拠した比較が行われる。
-
-```kotlin
-// Compare values of floating point arithmetic types
-println(Float.NaN == Float.NaN)   // false
-println(Double.NaN == Double.NaN) // false
-
-// Compare values of Any types
-println((Float.NaN as Any) == (Float.NaN as Any))   // true
-println((Double.NaN as Any) == (Double.NaN as Any)) // true
-```
-
-<!-- https://kotlinlang.org/spec/expressions.html#value-equality-expressions -->
-<!-- https://kotlinlang.org/spec/overload-resolution.html#infix-function-call -->
-<!-- https://pl.kotl.in/5YfLQ2WXv -->
 
 ---
 
@@ -1217,9 +1237,18 @@ println((Double.NaN as Any) == (Double.NaN as Any)) // true
 
 ---
 
+<!-- {"layout": "eye-catch"} --> 
+
+# 🐾 Thank you 🐾
+
+## ご清聴ありがとうございました！
+
+---
+
 <!-- {"layout": "eye-catch"} -->
 
-# 補足資料
+# 🐾 補足資料 🐾
+
 
 ---
 
