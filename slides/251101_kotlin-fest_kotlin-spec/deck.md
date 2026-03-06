@@ -4,10 +4,7 @@ title: 251101_kotlin-fest_kotlin-spec
 breaks: true
 codeBlockToImageCommand: "laminate"
 defaults:
-  - if: page >= 99999
-    freeze: false
   - if: true
-    layout: title-and-body
     freeze: true
 ---
 
