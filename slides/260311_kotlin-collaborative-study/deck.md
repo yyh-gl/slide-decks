@@ -4,7 +4,7 @@ title: 260311_kotlin-collaborative-study
 breaks: true
 codeBlockToImageCommand: "laminate"
 defaults:
-  - if: page > 0
+  - if: true
     freeze: true
 ---
 
