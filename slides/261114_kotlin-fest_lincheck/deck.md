@@ -39,7 +39,6 @@ LINE Digital Frontier株式会社
 ## ▼ Xアカウント
 
 @yyh_gl
-![Image](images/profile.jpg)
 
 <!-- https://x.com/yyh_gl -->
 
