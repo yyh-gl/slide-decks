@@ -71,7 +71,7 @@ LINE Digital Frontier株式会社
 1. なぜ再現しないのか
 1. Lincheckのアプローチ
 1. suspend関数もテストできる
-1. 実演：バグを確実に再現する
+1. 実演：不具合を確実に再現する
 1. まとめ
 
 <!-- TODO: agenda確定したらデザイン変える -->
@@ -88,6 +88,7 @@ LINE Digital Frontier株式会社
 <br>
 
 お好きなタイミングでご参照ください。
+※ 非同期処理の動きは実行環境に大きく依存するので必ずしも同じ動作にはなりません。
 
 ---
 
@@ -95,7 +96,7 @@ LINE Digital Frontier株式会社
 
 # 1. 再現しない並行処理の不具合
 
-## 諦めていませんか？
+## 祈っていませんか？
 
 ---
 
@@ -103,58 +104,61 @@ LINE Digital Frontier株式会社
 
 # 正しく見えるコード
 
-2つのスレッドで、カウンタをそれぞれ10万回インクリメントするだけのコード。
-結果は200000になるはず。
+2つのスレッドで、カウンタをそれぞれ1万回インクリメントする。
+結果は`20,000`になるはず。
 
 ```kotlin
 var counter = 0
 
 fun main() {
-    val t1 = thread { repeat(100_000) { counter++ } }
-    val t2 = thread { repeat(100_000) { counter++ } }
+    val t1 = thread { repeat(10_000) { counter++ } }
+    val t2 = thread { repeat(10_000) { counter++ } }
     t1.join()
     t2.join()
-    println(counter) // 200000のはず……？
+    println(counter) // 20,000 ?
 }
 ```
 
-<!-- TODO: Kotlin Playgroundのリンクを追加 -->
+<!-- https://pl.kotl.in/8gHWEeol6 -->
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content-with-comment"} -->
 
 # 実行してみると
 
-同じコード・同じ入力なのに、実行するたびに結果がずれる。
+同じコードなのに実行するたびに結果が異なる。
+
+<br>
 
 1回目: 200000
-2回目: 200000
-3回目: 187562 ← ！？
-4回目: 200000
+2回目: 187562 <- ！？
+3回目: 200000
 
-しかも、もう一度実行すると直る（ように見える）。
+<br>
 
-## 今日は機嫌がいいみたい
-
-<!-- TODO: 実測値に差し替える -->
+## 今日はすぐ直った！<br>テストの機嫌がいいみたい！
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content-and-conclusion"} -->
 
 # 「祈るテスト」の日常
 
-心当たりはないでしょうか。
+みなさんも心当たりはないでしょうか。
+
+<br>
 
 - CIでだけ、たまに落ちるテスト
-- 「とりあえずrerunしたら通った」
-- 再現しないので調査を打ち切り、`@Ignore`や自動リトライで対処
+- とりあえずrerunしたら通った（ので後日確認します）
 
-並行処理のバグは「再現しない」という一点で、通常のバグと性質が根本的に異なる。
-私たちはその検証を諦め、テストの成功を祈っている。
+<br>
 
-## テストの成否が運任せ＝「祈るテスト」
+並行処理の不具合は「必ず再現するわけではない」という一点で
+通常の不具合と性質が根本的に異なる。
+我々はその検証を諦め、テストの成功を祈ることがある。
+
+## テストの成否が運任せ ＝ 祈るテスト
 
 ---
 
@@ -162,19 +166,25 @@ fun main() {
 
 # なぜ再現しないのか
 
-<!-- time: 3:30 -->
-
 ---
 
 <!-- {"layout": "content"} -->
 
 # 疑問
 
-`counter++`はたった1行。
-1つの操作に見えるが、なぜ結果がずれるのだろうか。
+`counter++` というシンプルなコード。
+なぜ結果がずれるのだろうか。
 
 ```kotlin
-counter++
+var counter = 0
+
+fun main() {
+    val t1 = thread { repeat(10_000) { counter++ } }
+    val t2 = thread { repeat(10_000) { counter++ } }
+    t1.join()
+    t2.join()
+    println(counter)
+}
 ```
 
 ---
@@ -186,13 +196,11 @@ counter++
 `counter++`は1つの操作ではない。
 実際には3つのステップに分かれて実行される。
 
-```kotlin
-counter++
-// 実際にはこの3ステップに分かれる
-// ① counterの現在値を読む   (read)
-// ② 読んだ値に1を足す       (add)
-// ③ 結果をcounterへ書き戻す (write)
-```
+<br>
+
+1. counterの現在値を読む（read）
+2. 読んだ値に1を足す（add）
+3. 結果をcounterへ書き戻す（write）
 
 ---
 
@@ -200,24 +208,40 @@ counter++
 
 # 解説：消えるインクリメント
 
-2つのスレッドのステップが、次の順序で交互に実行（インターリービング）されると
+2つのスレッドのステップが、
+次の順序で交互に実行（インターリービング）されると
 片方のインクリメントが消えてしまう。
 
 | 順 | Thread 1 | Thread 2 | counter |
-|---|---|---|---|
-| 1 | read → 0 | | 0 |
-| 2 | | read → 0 | 0 |
-| 3 | add → 1 | | 0 |
-| 4 | | add → 1 | 0 |
-| 5 | write 1 | | 1 |
-| 6 | | write 1 | **1** |
-
-2回インクリメントしたはずなのに、結果は1。
-これがロストアップデートと呼ばれる不具合。
+|---|----------|----------|---------|
+| 1 | read → 0 |          | 0       |
+| 2 |          | read → 0 | 0       |
+| 3 | add → 1  |          | 0       |
+| 4 |          | add → 1  | 0       |
+| 5 | write 1  |          | 1       |
+| 6 |          | write 1  | **1**   |
 
 ---
 
 <!-- {"layout": "content"} -->
+
+# 解説：消えるインクリメント
+
+2回インクリメントしたはずなのに結果は1。
+これがロストアップデートと呼ばれる不具合。
+
+| 順 | Thread 1 | Thread 2 | counter |
+|---|----------|----------|---------|
+| 1 | read → 0 |          | 0       |
+| 2 |          | read → 0 | 0       |
+| 3 | add → 1  |          | 0       |
+| 4 |          | add → 1  | 0       |
+| 5 | write 1  |          | 1       |
+| 6 |          | write 1  | **1**   |
+
+---
+
+<!-- {"layout": "content-with-content"} -->
 
 # 実行順序の組み合わせ爆発
 
@@ -226,10 +250,12 @@ counter++
 実際のコードではさらに桁違いの数になる。
 
 通常のテストは1回の実行につき、無数にある順序のうちの1つしか試せない。
-バグを踏む順序を引き当てるかどうかは運次第。
+不具合を踏む順序を引き当てるかどうかは運次第。
 だからリトライしても再現しないし、リトライで通っても不具合が直ったわけではない。
 
-1回の実行は、無数の順序のうちのたった1つ
+1回の実行は、無数の順序のうちのたった1つにすぎない。
+
+## むりぽ
 
 <!-- 20 = C(6,3)、184756 = C(20,10) -->
 
@@ -245,21 +271,28 @@ counter++
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content-and-conclusion"} -->
 
 # Lincheckとは
 
 JetBrains製の並行処理テストフレームワーク。
 
-- kotlinx.coroutines自体の品質保証に組み込まれ、Mutex・Semaphore・Channelといった
-  コアの検証に実際に使われている（CAV 2023採録論文）
-- JCToolsなど著名な並行ライブラリでも、未知の不具合を発見した実績がある
-- 最新はLincheck 3系（2026年5月に3.6がリリース）
+- kotlinx.coroutines自体の品質保証に組み込まれ、
+  Mutex・Semaphore・Channelといったコア機能の検証で実際に使われている
+- JCToolsといった著名な並行処理ライブラリで未知の不具合を発見した実績がある
 
-Kotlinのcoroutinesの品質を、影で支えているツールと言える。
+## coroutinesの品質を影で支えているツール
 
 <!-- https://github.com/JetBrains/lincheck -->
 <!-- TODO: CAV 2023論文へのリンクを追加 -->
+
+---
+
+<!-- {"layout": "section"} -->
+
+# Lincheckのテスト戦略
+
+## モデル検査とストレステスト
 
 ---
 
@@ -267,7 +300,7 @@ Kotlinのcoroutinesの品質を、影で支えているツールと言える。
 
 # 疑問
 
-バグを検出するには、まず「正しい」を定義する必要がある。
+不具合を検出するには、まず「正しい」を定義する必要がある。
 並行コードが「正しい」とは、そもそもどういうことだろうか。
 
 ---
@@ -293,7 +326,7 @@ Kotlinのcoroutinesの品質を、影で支えているツールと言える。
 「1回目→2回目」の順でも「2回目→1回目」の順でも、逐次実行なら結果は必ず2になる。
 
 結果が1になった実行は、どんな順序の逐次実行とも一致しない。
-つまり線形化可能性を満たしておらず、バグと判断できる。
+つまり線形化可能性を満たしておらず、不具合と判断できる。
 
 ---
 
@@ -420,11 +453,11 @@ fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 
 # 2つの戦略の使い分け
 
-| | ストレステスト | モデルチェッキング |
-|---|---|---|
-| 探索方法 | 大量実行（確率的） | 順序を制御して系統的に探索 |
-| 再現性 | 低い | 高い（決定的） |
-| 失敗トレース | なし | あり |
+|         | ストレステスト     | モデルチェッキング       |
+|---------|-------------|-----------------|
+| 探索方法    | 大量実行（確率的）   | 順序を制御して系統的に探索   |
+| 再現性     | 低い          | 高い（決定的）         |
+| 失敗トレース  | なし          | あり              |
 | 向いている用途 | 実環境に近い挙動の確認 | ロジックの不具合検出・デバッグ |
 
 基本はモデルチェッキングで探索し、補完としてストレステストを回すのが定石。
@@ -522,7 +555,7 @@ coroutinesの品質は、Lincheckが支えている
 
 # 6. 実演
 
-## 冒頭のバグを確実に再現する
+## 冒頭の不具合を確実に再現する
 
 <!-- time: 14:30 -->
 
@@ -589,7 +622,7 @@ The following interleaving leads to the error:
 ```
 
 Thread 2が読んだ直後にThread 1へスイッチし、両者が同じ0を読んでいた。
-バグの経緯がそのまま書いてある。
+不具合の経緯がそのまま書いてある。
 
 犯人の自白付き。
 
@@ -632,7 +665,7 @@ Lincheck 3で「並行データ構造の作者のためのツール」から「�
 
 # 本日の振り返り
 
-- 並行処理のバグは「再現しない」——原因はインターリービングの組み合わせ爆発
+- 並行処理の不具合は「再現しない」——原因はインターリービングの組み合わせ爆発
 - Lincheckのアプローチ
   - 正しさは線形化可能性（逐次仕様との等価性）で定義する
   - テストは「何を」だけ宣言する
@@ -663,7 +696,7 @@ Lincheck 3で「並行データ構造の作者のためのツール」から「�
 次に「たまに落ちるテスト」に出会ったとき、rerunボタンの前で祈る以外の選択肢を
 思い出してもらえたら嬉しいです。
 
-並行処理のバグは怖いものですが、「正しさを定義し、探索する」という道具があれば
+並行処理の不具合は怖いものですが、「正しさを定義し、探索する」という道具があれば
 きちんと向き合えます。
 まずは自分のプロジェクトの並行処理コードに、Lincheckのテストを1つ書いてみてください。
 きっと発見があるはずです。
@@ -718,8 +751,13 @@ aaa
 
 # 参考資料
 
-- Lincheck公式リポジトリ・ドキュメント
-- CAV 2023論文「Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM」
+- [Lincheck 公式リポジトリ](https://github.com/JetBrains/lincheck)
+- [Lincheck 公式ドキュメント](https://kotlinlang.org/docs/lincheck-guide.html)
+- ["How we test concurrent algorithms in Kotlin Coroutines" by Nikita Koval: Video. KotlinConf 2023](https://youtu.be/jZqkWfa11Js?si=BJFoWha-z1QekQEI)
+- "Lincheck: Testing concurrency on the JVM" workshop by Maria Sokolova: Part 1, Part 2. Hydra 2021
+  - [Part 1](https://youtu.be/YNtUK9GK4pA?si=c79cbHnFhF5NYPa0)
+  - [Part 2](https://youtu.be/EW7mkAOErWw?si=v6esbKpF0nzD-nVg) 
+- ["Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM" by Nikita Koval et al.: Paper. 2023](https://youtu.be/jZqkWfa11Js?si=ZpiOwVHnDJSczbz_)
 - KotlinConf 2023ワークショップ
 - JCStress
 - kotlinx.coroutinesにおけるLincheckテストの実例
