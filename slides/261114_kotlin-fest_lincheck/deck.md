@@ -5,7 +5,7 @@ breaks: true
 codeBlockToImageCommand: "laminate"
 defaults:
   - if: true
-    freeze: false
+    freeze: true
 ---
 
 <!-- {"layout": "title"} -->
@@ -30,7 +30,7 @@ defaults:
 
 ## ▼ 名前
 
-本田雄亮
+本田 雄亮
 
 ## ▼ 所属企業
 
@@ -63,15 +63,24 @@ LINE Digital Frontier株式会社
 
 ---
 
+<!-- {"layout": "content"} -->
+
+# スポンサーブースやってます
+
+アーキテクチャボードを掲示中。<br>
+
+LINEマンガコインやEBJクーポンが当たる抽選会もやってます🎁
+ぜひお立ち寄りください！
+
+---
+
 <!-- {"layout": "agenda"} -->
 
 # アジェンダ
 
 1. 再現しない並行処理の不具合
-1. なぜ再現しないのか
-1. Lincheckのアプローチ
-1. suspend関数もテストできる
-1. 実演：不具合を確実に再現する
+1. Lincheckを使った並行処理テスト
+1. suspend関数への適用
 1. まとめ
 
 <!-- TODO: agenda確定したらデザイン変える -->
@@ -83,10 +92,11 @@ LINE Digital Frontier株式会社
 # サンプルコードおよび参考資料
 
 本発表で使用するサンプルコード（Kotlin Playgroundのリンク）や
-参考資料のリンクはスライドのスピーカーノートに記載しています。<br>
+参考資料のリンクはスライドのスピーカーノートに記載しています。
+お好きなタイミングでご参照ください。<br>
 
-お好きなタイミングでご参照ください。
-※ 非同期処理の動きは実行環境に大きく依存するので必ずしも同じ動作にはなりません。
+※ 非同期処理の動きは実行環境に大きく依存するので
+　 必ずしも同じ動作にはなりません。
 
 ---
 
@@ -102,8 +112,9 @@ LINE Digital Frontier株式会社
 
 # 正しく見えるコード
 
-2つのスレッドで、カウンタをそれぞれ1万回インクリメントする。
-結果は`20,000`になるはず。
+2つのスレッドから、1つのカウンターを
+それぞれ1万回インクリメントする。
+結果は `20,000` になるはず。
 
 ```kotlin
 var counter = 0
@@ -117,7 +128,7 @@ fun main() {
 }
 ```
 
-<!-- https://pl.kotl.in/8gHWEeol6 -->
+<!-- https://pl.kotl.in/aPyhp4ZbQm -->
 
 ---
 
@@ -127,13 +138,18 @@ fun main() {
 
 同じコードなのに実行するたびに結果が異なる。<br>
 
-1回目: 200000
-2回目: 187562 <- ！？
-3回目: 200000
+1回目: 20000
+2回目: 18756 ← ！？
+3回目: 20000<br>
 
-<br>
+並行処理ではあるあるな不具合。<br>
 
-## 今日はすぐ直った！<br>テストの機嫌がいいみたい！
+実行のたびに結果が変わる処理がテストに紛れ込むと
+「たまに落ちるテスト」ができあがる。<br>
+
+そんなとき、我々は **"祈る"**。
+
+## 今日はすぐ直った！<br>PCの機嫌がいいみたい！
 
 ---
 
@@ -150,7 +166,7 @@ fun main() {
 通常の不具合と性質が根本的に異なる。
 私たちはその検証を諦め、テストの成功を祈ることがある。
 
-## テストの成否が運任せ ＝ 祈るテスト
+## 祈るテスト ＝ テストの成否が運任せ
 
 ---
 
@@ -162,7 +178,7 @@ fun main() {
 
 <!-- {"layout": "content"} -->
 
-# 疑問
+# さっきのコードを見てみる
 
 `counter++` というシンプルなコード。
 結果がずれるのはなぜ？
@@ -179,13 +195,15 @@ fun main() {
 }
 ```
 
+<!-- https://pl.kotl.in/aPyhp4ZbQm -->
+
 ---
 
 <!-- {"layout": "content"} -->
 
-# 答え
+# `counter++` の裏側
 
-`counter++`は1つの操作ではない。
+`counter++` は1つの操作ではない。
 実際には3つのステップに分かれて実行される。<br>
 
 1. counterの現在値を読む（read）
@@ -196,11 +214,29 @@ fun main() {
 
 <!-- {"layout": "content"} -->
 
-# 解説
+# 実行順序①： 想定通りの挙動
 
-2つのスレッドのステップが、
-次の順序で交互に実行（インターリービング）されると
-片方のインクリメントが消えてしまう（ロストアップデート）。
+Thread 1がread→add→writeを完了させてから
+Thread 2が同じ処理を行うと
+2回のインクリメントがどちらも反映される。
+
+| 順  | Thread 1 | Thread 2 | counter |
+| --- | -------- | -------- | ------- |
+| 1   | read → 0 |          | 0       |
+| 2   | add → 1  |          | 0       |
+| 3   | write 1  |          | 1       |
+| 4   |          | read → 1 | 1       |
+| 5   |          | add → 2  | 1       |
+| 6   |          | write 2  | **2**   |
+
+---
+
+<!-- {"layout": "content"} -->
+
+# 実行順序②： 想定とは異なる挙動
+
+次の順序で交互に実行されると
+片方のインクリメントが消えたように見える（ロストアップデート）。
 
 | 順  | Thread 1 | Thread 2 | counter |
 | --- | -------- | -------- | ------- |
@@ -213,18 +249,33 @@ fun main() {
 
 ---
 
+<!-- {"layout": "content-and-conclusion"} -->
+
+# どのように実行されるかは運任せ
+
+スレッドの切り替わり方（インターリービング）が違うことにより
+結果が変わる。<br>
+
+たくさんの可能性の中から毎回1つだけが実行されるので
+成功するか失敗するかは運任せになる。
+
+## そして、我々は ”祈る”
+
+---
+
 <!-- {"layout": "content-with-comment"} -->
 
 # 実行順序の組み合わせ爆発
 
-インターリービングの総数は膨大。<br>
+この「たくさんの可能性」とは、実際にはどれくらいの数なのか。<br>
 
 2スレッドが各3ステップを実行するだけでも20通り。
-各10ステップなら184756通り。<br>
+各10ステップなら184,756通り。
+（スレッド内の各ステップ実行順序は固定）<br>
 
-実際のコードではさらに桁違いの数になる。
+実際のコードはさらに複雑な可能性も…
 
-## むりぽ
+## むりぽ<br><br>┐（´ー｀）┌
 
 <!-- 20 = C(6,3)、184756 = C(20,10) -->
 
@@ -232,7 +283,7 @@ fun main() {
 
 <!-- {"layout": "content-and-conclusion"} -->
 
-# 実行順序の組み合わせ爆発
+# テストで見つけるのも難しい
 
 通常のテストは1回の実行につき、
 無数にある順序のうちの1つしか試せない。<br>
@@ -248,11 +299,7 @@ fun main() {
 
 <!-- {"layout": "section"} -->
 
-# 4. Lincheckのアプローチ
-
-## 祈りから、探索へ
-
-<!-- time: 6:00 -->
+# 4. Lincheck
 
 ---
 
@@ -265,13 +312,14 @@ JetBrains製の並行処理テストフレームワーク。<br>
 - kotlinx.coroutines自体の品質保証に組み込まれ、
   MutexやSemaphore, Channelといったコア機能の検証で
   実際に使われている
-- 著名な並行処理関連のライブラリ（JCTools）で
+- 著名な並行処理関連のライブラリ（JCTools）にて
   未知の不具合を発見した実績がある
 
 ## coroutinesの品質を影で支えているツール
 
 <!-- https://github.com/JetBrains/lincheck -->
-<!-- TODO: CAV 2023論文へのリンクを追加 -->
+<!-- https://github.com/Kotlin/kotlinx.coroutines/tree/master/kotlinx-coroutines-core/jvm/test/lincheck -->
+<!-- https://link.springer.com/chapter/10.1007/978-3-031-37706-8_8 の"1 Introduction"-->
 
 ---
 
@@ -287,24 +335,26 @@ JetBrains製の並行処理テストフレームワーク。<br>
 
 # 2つの探索戦略
 
-不具合を検知するには、
-インターリービングを実際に踏んでみるしかない。
+不具合を検知するために、様々な実行順序を実際に試してみる。
 Lincheckは2つの戦略でこれを実現する。<br>
 
-- モデル検査：実行順序そのものを制御し、系統的に探索する
-- ストレステスト：シナリオを大量に実行し、<br>　　　　　　　　多様な順序を引き当てにいく
+- モデル検査：実行順序そのものを制御し、**系統的に探索する**
+- ストレステスト：シナリオを大量に実行し、**確率的に探索する**
+
+<!-- https://kotlinlang.org/docs/lincheck-testing-strategies.html -->
 
 ---
 
 <!-- {"layout": "content"} -->
 
-# 戦略①：モデル検査
+# 戦略①：モデル検査（Model checking）
 
-スレッドの実行順序そのものを制御し、
-コンテキストスイッチをどこで起こすかを系統的に探索する戦略。<br>
+JVMのスケジューラに任せず、Lincheckがスレッドの切り替えを制御。
+本制御を通して系統的に探索する戦略。<br>
 
 - 運に頼らない
-  - 同じ不具合を確実に再現できる
+  - 同じ入力なら必ず同じ結果になる（決定的）ので
+    見つけた不具合を確実に再現可能
 - 失敗時は「どの順序で壊れたか」のトレースを出力
 
 ```kotlin
@@ -312,17 +362,19 @@ Lincheckは2つの戦略でこれを実現する。<br>
 fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 ```
 
+<!-- https://kotlinlang.org/docs/lincheck-model-checking.html -->
+
 ---
 
 <!-- {"layout": "content"} -->
 
 # 戦略②：ストレステスト
 
-様々なテストシナリオを大量に実行し（デフォルトで数万回規模）、
-多様なインターリービングを引き当てにいく戦略。
+様々なテストシナリオを大量に実行し、
+多様な実行順序を引き当てにいく戦略（デフォルトで数万回規模）。
 → 試行回数を増やし、不具合を踏む確率を上げる。<br>
 
-- 実際のスレッドで実行するため、実環境に近い挙動を確認できる
+- Lincheckによるスレッド制御はなく、<br>実環境に近い挙動を確認できる
 - 確率的な探索であり、網羅性および再現性は保証されない
 
 ```kotlin
@@ -330,36 +382,75 @@ fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 fun stressTest() = StressOptions().check(this::class)
 ```
 
+<!-- https://kotlinlang.org/docs/lincheck-testing-strategies.html#stress-testing -->
+
 ---
 
 <!-- {"layout": "content"} -->
 
 # 2つの戦略の使い分け
 
+モデル検査とストレステストの併用がおすすめ。
+
 |                | モデル検査                         | ストレステスト             |
 | -------------- | ---------------------------------- | -------------------------- |
-| 探索方法       | 順序を制御して<br>系統的に探索     | 大量実行（確率的）         |
-| 再現性         | 高い（決定的）                     | 低い                       |
+| 探索方法       | 順序を制御して<br>系統的に探索     | 大量実行         |
+| 再現性         | 高い（決定的）                     | 低い（確率的）                       |
 | 失敗トレース   | あり                               | なし                       |
-| 向いている用途 | ロジックの<br>不具合検出・デバッグ | 実環境に近い挙動の<br>確認 |
-
-基本はモデル検査で探索し、
-補完としてストレステストを回すのが定石。
-祈らない。探索する。
+| 向いている用途 | ロジックの<br>不具合検出・デバッグ | 実環境に近い挙動の確認 |
 
 ---
 
 <!-- {"layout": "content-and-conclusion"} -->
 
+# 探索は証明ではない
+
+モデル検査もストレステストも、探索には限りがある。<br>
+
+- モデル検査
+  - 探索するシナリオ数および試行回数には上限がある
+  - 特性上、検知できない不具合もある
+- ストレステスト
+  - 確率的な探索であり、試行回数が少なければ<br>不具合を引き当てられない
+    - 試行回数が多くても不具合を踏む確率は100%ではない
+
+
+## 不具合を検知できない可能性（偽陰性）がある
+
+<!-- https://kotlinlang.org/docs/lincheck-model-checking.html#relaxed-java-memory-model -->
+
+---
+
+<!-- {"layout": "content-and-conclusion"} -->
+
+# だから、「不要」というわけではない
+
+偽陰性のリスクはあるが、不具合を検知できる可能性は
+大幅に上がる。<br>
+
+モデル検査は一度検知した不具合を確実に再現できる。
+
+## 「祈る」を「探索」に。これが大きなメリット
+
+---
+
+<!-- {"layout": "section"} -->
+
+# 「正しい」の定義
+
+---
+
+<!-- {"layout": "content"} -->
+
 # 「正しい」を定義してはじめて検知できる
 
 モデル検査もストレステストも、
-実行パターンを生成する仕組みにすぎない。<br>
+様々な実行パターンを生成できることはわかった。<br>
 
-生成した実行結果が「正しいか」を判定する基準がなければ、
-不具合として検出できない。
+では、生成した実行結果が正しいかどうかは、どのように判定する？<br>
 
-## 「正しい」並列処理とは、そもそもどういうことだろうか
+**Lincheckは「線形化可能性」を用いて正しさを判定する。**
+（デフォルト設定における挙動。変更可能）
 
 ---
 
@@ -367,29 +458,169 @@ fun stressTest() = StressOptions().check(this::class)
 
 # 線形化可能性
 
-並行に実行した結果が、操作を何らかの順序で1つずつ逐次実行した結果と一致すること。
+並行に実行した操作が、何らかの順序で1つずつ逐次実行した結果と一致すること。<br>
 
-この性質を線形化可能性（linearizability）と呼ぶ。
+先ほどのカウンターの例で言うと、`counter++` と `counter++` を
+並行に呼んだとき「1つ目→2つ目」,「2つ目→1つ目」の
+どちらの実行順序でも逐次実行なら結果は必ず2になる。<br>
+
+結果が1になる実行は、どんな順序の逐次実行とも一致しない。
+よって、線形化可能性を満たしておらず、不具合と判断する。
+
+<!-- https://dl.acm.org/doi/10.1145/41625.41627 -->
+
+---
+
+<!-- {"layout": "section"} -->
+
+# 5. suspend関数のテスト
+
+## Kotlinと言えばCoroutines、Coroutinesと言えばsuspend
 
 ---
 
 <!-- {"layout": "content"} -->
 
-# 各操作は「一瞬で」起きたとみなす
+# suspendする関数のテストはどうなる？
 
-各操作が、実行期間中のどこか一点で
-「一瞬で」起きたとみなせるなら、その並行実行は正しい。<br>
+例として、`Channel` の `send` と `receive` を見てみる。<br>
 
-先ほどのカウンタの例で言うと、`inc()`と`inc()`を並行に呼んだとき
-「1つ目→2つ目」の順でも「2つ目→1つ目」の順でも
-逐次実行なら結果は必ず2になる。<br>
+Senderがいなければ `receive` はサスペンドする。
+これは不具合ではなく、仕様どおりの正しい挙動。<br> 
 
-結果が1になった実行は、どんな順序の逐次実行とも一致しない。
-つまり線形化可能性を満たしておらず、不具合と判断できる。
+しかし、`receive` がずっとサスペンドすると、
+後続の処理が進まないため、逐次実行と等価な結果を得られない。
+つまり、線形化可能性を満たすかのチェックができない。
+
+```kotlin
+val channel = Channel<Int>()
+channel.receive() // wait forever ...
+```
+
+---
+
+<!-- {"layout": "content"} -->
+
+# Lincheckのアプローチ
+
+Dual Data Structures理論に基づき、
+サスペンドする操作を別の視点で捉える。<br>
+
+操作を以下の通り分解。
+- 要求の登録（requeset）
+- 再開・完了（follow-up）<br>
+
+本分離により逐次実行の結果と
+比較できるようになり、
+線形化可能性の判定が行える。
+
+![Dual Data Structures](images/dualdatastructure.png)
+
+<!-- https://link.springer.com/chapter/10.1007/978-3-540-30186-8_13 -->
 
 ---
 
 <!-- {"layout": "section"} -->
+
+# 7. まとめ
+
+---
+
+<!-- {"layout": "content-and-conclusion"} -->
+
+# 本日の振り返り
+
+- 並行処理の不具合は**再現しにくい**
+  - 原因は実行順序の組み合わせ爆発
+- Lincheckを使った並行処理テスト
+  - モデル検査とストレステストで様々な実行順序を探索
+  - 正しさは線形化可能性で定義
+- suspend関数も検証可能
+  - 「要求の登録」と「再開・完了」に分解
+     （Dual Data Structures理論）
+
+## 祈るテストから、探索するテストへ
+
+---
+
+<!-- {"layout": "end"} -->
+
+end
+
+---
+
+<!-- {"layout": "references"} -->
+
+# 参考資料
+
+- JetBrains. ["Overview"](https://kotlinlang.org/docs/lincheck-guide.html). Kotlin Documentation. 出版年不明, (参照 2026-11-03).
+- JetBrains. ["Model checking"](https://kotlinlang.org/docs/lincheck-model-checking.html#bounded-exploration). Kotlin Documentation. 出版年不明, (参照 2026-11-03).
+- Nikita Koval. ["How we test concurrent algorithms in Kotlin Coroutines by Nikita Koval"](https://www.youtube.com/watch?v=jZqkWfa11Js). YouTube (Kotlin by JetBrains). 2023, (参照 2026-11-03).
+- Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 1)"](https://www.youtube.com/watch?v=YNtUK9GK4pA). YouTube (Hydra). 2021, (参照 2026-11-03).
+- Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 2)"](https://www.youtube.com/watch?v=EW7mkAOErWw). YouTube (Hydra). 2021, (参照 2026-11-03).
+- Nikita Koval, et al. "Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM". Computer Aided Verification (CAV 2023) Part I. Lecture Notes in Computer Science, vol.13964. Constantin Enea, Akash Lal編. Cham, Springer, 2023, p.156-169. DOI: [10.1007/978-3-031-37706-8_8](https://doi.org/10.1007/978-3-031-37706-8_8).
+- Maurice Herlihy, Jeannette Wing. Linearizability: A Correctness Condition for Concurrent Objects. ACM Transactions on Programming Languages and Systems. 1990, vol.12, no.3, p.463-492. DOI: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972).
+- JetBrains. ["Lincheck"](https://plugins.jetbrains.com/plugin/24171-lincheck). JetBrains Marketplace. 2025, (参照 2026-11-03).
+
+---
+
+<!-- {"layout": "reference-repositories"} -->
+
+# 参考リポジトリ
+
+- [JetBrains/lincheck](https://github.com/JetBrains/lincheck)
+- [openjdk/jcstress](https://github.com/openjdk/jcstress)
+- [Kotlin/kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines/)
+
+---
+
+<!-- {"layout": "section"} -->
+
+# 補足資料
+
+---
+
+<!-- {"layout": "content", "skip": true} -->
+
+# 導入手順の詳細
+
+<!-- TODO: Gradle依存追加の全量、JVM起動フラグの要否、JUnit 4/5どちらで動くかを実物で検証して記載する -->
+
+---
+
+<!-- {"layout": "content", "skip": true} -->
+
+# モデル検査の仕組み：スイッチポイントを差し込む
+
+バイトコードを書き換えて、共有変数の読み書きやロックなど
+コンテキストスイッチが起こりうる箇所に「スイッチポイント」を挿入する。<br>
+
+- Lincheck自身のスケジューラが、どのスイッチポイントで
+  どのスレッドへ切り替えるかを決める
+- コンテキストスイッチの数が少ない順に優先して探索する
+  （多くの不具合は少ない切り替えで再現するため）
+- スケジュールを自分で制御しているからこそ、
+  壊れた順序をそのまま再生できる
+
+<!-- TODO: バイトコード書き換え・スイッチポイントの実装詳細を公式Docs/論文で検証する -->
+
+---
+
+<!-- {"layout": "content", "skip": true} -->
+
+# Lincheckの注意点・制約
+
+- モデル検査が前提とするメモリモデルの制約。だからこそストレステストとの併用が推奨される
+- 実行時間：探索するため、通常のユニットテストより時間がかかる
+- I/Oや外部リソースを含むコードは、そのままでは対象にしにくい
+- 偽陰性のリスク：探索範囲（iterations/invocations）を小さくすると不具合を見逃す。
+  CIの実行時間とのトレードオフになる
+
+<!-- TODO: メモリモデル前提の最新状況、CIでのinvocations数調整の実践例を検証して記載する -->
+
+---
+
+<!-- {"layout": "section", "skip": true} -->
 
 # 「正しさ」の判定方法の違い
 
@@ -397,7 +628,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content", "skip": true} -->
 
 # JCStress：結果を列挙する
 
@@ -414,7 +645,7 @@ Lincheckと同様の並行処理テストツールであるJCStressでは、
 
 ---
 
-<!-- {"layout": "content-and-conclusion"} -->
+<!-- {"layout": "content-and-conclusion", "skip": true} -->
 
 # Lincheck：仕様で判定する
 
@@ -429,324 +660,9 @@ Lincheckは、対象クラスを1スレッドで動かした結果、
 
 ---
 
-<!-- TOOD: sectionを一個いれようか -->
+<!-- {"layout": "content", "skip": true} -->
 
-<!-- {"layout": "content"} -->
-
-# テストの書き方：「何を」だけ宣言する
-
-テストしたい操作に`@Operation`を付けるだけでよい。
-シナリオそのものは書かない。
-
-```kotlin
-import org.jetbrains.lincheck.datastructures.ModelCheckingOptions
-import org.jetbrains.lincheck.datastructures.Operation
-
-class CounterTest {
-    private var counter = 0
-
-    @Operation
-    fun inc() = ++counter
-
-    @Operation
-    fun get() = counter
-
-    @Test
-    fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
-}
-```
-
-<!-- TODO: パッケージ名・APIシグネチャをLincheck 3.6の実物で検証する -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 残りは全部Lincheckがやる
-
-宣言した操作から、Lincheckが以下を行う。<br>
-
-1. シナリオ生成：操作の並行な組み合わせを自動生成
-2. 実行：ストレステストまたはモデル検査で探索
-3. 判定：結果が逐次仕様と等価か（線形化可能か）を自動チェック<br>
-
-「どう探索し、どう判定するか」はフレームワークの仕事。
-開発者は「何をテストするか」だけを書けばよい。<br>
-
-テストシナリオは1つも書いてない。
-
----
-
-<!-- {"layout": "section"} -->
-
-# 5. suspend関数もテストできる
-
-## coroutinesを持つKotlinだからこそ
-
-<!-- time: 11:00 -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 疑問
-
-Kotlinの並行処理と言えばcoroutines。
-`Channel`の`send`/`receive`の「正しさ」は、どう定義すればよいだろうか。
-
-相手がいなければ`receive()`はサスペンドする。
-これは失敗ではなく、仕様どおりの正しい挙動。
-しかし逐次実行では`receive()`が永遠にサスペンドしてしまい
-「逐次実行と等価」という線形化可能性の定義が、そのままでは通用しない。
-
-```kotlin
-val ch = Channel<Int>() // capacity = 0（ランデブー）
-
-// receiveが先に呼ばれたら？
-// → sendが来るまでサスペンドするのが「正しい」
-```
-
----
-
-<!-- {"layout": "content"} -->
-
-# 答え
-
-Lincheckは線形化可能性をサスペンドする操作へ拡張している
-（dual data structuresの理論）。
-
-操作を「要求の登録」と「完了」の2つに分けて捉えることで
-途中でサスペンドし、あとで再開して完了する操作も逐次仕様と突き合わせられる。
-
-<!-- TODO: dual data structures論文へのリンクを追加 -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 解説：書き方は変わらない
-
-開発者から見れば、`@Operation`をsuspend関数に付けるだけ。
-理論の難しさはLincheckが吸収してくれる。
-
-```kotlin
-class RendezvousChannelTest {
-    private val ch = Channel<Int>()
-
-    @Operation
-    suspend fun send(value: Int) = ch.send(value)
-
-    @Operation
-    suspend fun receive() = ch.receive()
-
-    @Test
-    fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
-}
-```
-
-<!-- TODO: サスペンドしたまま終わった操作の結果表示形式を実物で検証する -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# Kotlinだから生まれた検証技術
-
-- 結果を列挙するアプローチでは、
-  「サスペンドすることこそ正しい」という操作は表現しにくい
-- coroutinesという言語機能を持つKotlinだからこそ必要になり、生まれた検証技術
-- そしてkotlinx.coroutines自体（Mutex・Semaphore・Channel）が
-  実際にこの仕組みでテストされている
-
-coroutinesの品質は、Lincheckが支えている
-
----
-
-<!-- {"layout": "section"} -->
-
-# 6. 実演
-
-## 冒頭の不具合を確実に再現する
-
-<!-- time: 14:30 -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 実演でお見せするもの
-
-1. 冒頭のカウンタの不具合をLincheckで検出する——「たまに」ではなく毎回
-2. 失敗トレースを読む——どの実行順序で壊れたのか
-3. IntelliJ IDEAでトレースをステップ実行する
-
-（ここからライブデモ。以降のスライドはデモ用のバックアップを兼ねる）
-
----
-
-<!-- {"layout": "content"} -->
-
-# デモコード：任意の並行コードをテストする
-
-Lincheck 3で追加された`Lincheck.runConcurrentTest`を使うと
-`@Operation`スタイルにせず、任意の並行コードをそのままテストできる。
-
-```kotlin
-import org.jetbrains.lincheck.Lincheck
-import kotlin.concurrent.thread
-
-class CounterBugTest {
-    @Test
-    fun test() = Lincheck.runConcurrentTest {
-        var counter = 0
-        val t1 = thread { counter++ }
-        val t2 = thread { counter++ }
-        t1.join()
-        t2.join()
-        assertEquals(2, counter) // 毎回ここで不具合を検出できる
-    }
-}
-```
-
-冒頭のコードでは10万回回して「たまに」結果がずれた。
-Lincheckなら各スレッド1回のインクリメントでも、壊れる順序を探索して確実に検出する。
-
-<!-- TODO: Lincheck.runConcurrentTestの正確なパッケージ・シグネチャを実物で検証する -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 失敗トレースを読む
-
-Lincheckは失敗を検出すると、どのインターリービングで壊れたかを出力する。
-
-```kotlin
-= Concurrent test failed =
-    The following interleaving leads to the error:
-| Thread 1          | Thread 2          |
-|                    | counter.READ: 0   |
-|                    | switch            |
-| counter.READ: 0    |                   |
-| counter.WRITE(1)   |                   |
-|                    | counter.WRITE(1)  |
-```
-
-Thread 2が読んだ直後にThread 1へスイッチし、両者が同じ0を読んでいた。
-不具合の経緯がそのまま書いてある。
-
-犯人の自白付き。
-
-<!-- TODO: 実際の失敗トレース出力に差し替える -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 導入の敷居は下がっている
-
-依存を1行足すだけで使い始められる。
-
-```kotlin
-dependencies {
-    testImplementation("org.jetbrains.lincheck:lincheck:3.6") // 座標は要検証
-}
-```
-
-IntelliJ IDEAとの統合で、失敗トレースをデバッガでステップ実行できる。
-Lincheck 3で「並行データ構造の作者のためのツール」から「一般開発者のツール」へ進化した。
-
-明日から自分のコードに使える
-
-<!-- TODO: IntelliJ IDEA統合の正式名称・手順を確認し、スクリーンショットを追加 -->
-
----
-
-<!-- {"layout": "section"} -->
-
-# 7. まとめ
-
-## hoge
-
-<!-- time: 18:00 -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# 本日の振り返り
-
-- 並行処理の不具合は「再現しない」——原因はインターリービングの組み合わせ爆発
-- Lincheckのアプローチ
-  - 正しさは線形化可能性（逐次仕様との等価性）で定義する
-  - テストは「何を」だけ宣言する
-  - 実行順序はストレステストとモデル検査で探索する
-- suspend関数も検証できる——coroutinesを持つKotlinだから生まれた技術
-- 失敗トレースで「どの順序で壊れたか」まで分かる
-
----
-
-<!-- {"layout": "conclusion"} -->
-
-# 並行処理に向き合う3つの考え方
-
-1. 正しさの定義から始める——テストの前に「何が正しいか」を言葉にする
-2. 「何を」テストするかを宣言する——「どう」はフレームワークに任せる
-3. 非決定性を祈りではなく探索で扱う——運任せをやめ、制御下に置く
-
-この考え方は、Lincheckを使わない場面でも、並行処理と向き合う武器になる。
-
-祈るテストから、探索するテストへ
-
----
-
-<!-- {"layout": "content"} -->
-
-# 終わりのあいさつ
-
-次に「たまに落ちるテスト」に出会ったとき、rerunボタンの前で祈る以外の選択肢を
-思い出してもらえたら嬉しいです。
-
-並行処理の不具合は怖いものですが、「正しさを定義し、探索する」という道具があれば
-きちんと向き合えます。
-まずは自分のプロジェクトの並行処理コードに、Lincheckのテストを1つ書いてみてください。
-きっと発見があるはずです。
-
----
-
-<!-- {"layout": "end"} -->
-
-aaa
-
----
-
-<!-- {"layout": "section"} -->
-
-# 補足資料
-
----
-
-<!-- {"layout": "content"} -->
-
-# 導入手順の詳細
-
-<!-- TODO: Gradle依存追加の全量、JVM起動フラグの要否、JUnit 4/5どちらで動くかを実物で検証して記載する -->
-
----
-
-<!-- {"layout": "content"} -->
-
-# Lincheckの注意点・制約
-
-- モデル検査が前提とするメモリモデルの制約。だからこそストレステストとの併用が推奨される
-- 実行時間：探索するため、通常のユニットテストより時間がかかる
-- I/Oや外部リソースを含むコードは、そのままでは対象にしにくい
-
-<!-- TODO: メモリモデル前提の最新状況、invocations数調整などCIでの運用上の工夫を検証して記載する -->
-
----
-
-<!-- {"layout": "content"} -->
+<!-- TODO: 対応する一貫性モデルの最新状況を検証して記載する -->
 
 # 線形化可能性、もう少しだけ
 
@@ -754,24 +670,70 @@ aaa
 - dual data structures（Scherer & Scott）
 - Lincheckが対応する一貫性モデル
 
-<!-- TODO: 対応する一貫性モデルの最新状況を検証して記載する -->
+---
+
+<!-- {"layout": "section"} -->
+
+# Lincheckの使い方
 
 ---
 
 <!-- {"layout": "content"} -->
 
-# 参考資料
+# テスト対象を宣言
 
-- [Lincheck 公式リポジトリ](https://github.com/JetBrains/lincheck)
-- [Lincheck 公式ドキュメント](https://kotlinlang.org/docs/lincheck-guide.html)
-- ["How we test concurrent algorithms in Kotlin Coroutines" by Nikita Koval: Video. KotlinConf 2023](https://youtu.be/jZqkWfa11Js?si=BJFoWha-z1QekQEI)
-- "Lincheck: Testing concurrency on the JVM" workshop by Maria Sokolova: Part 1, Part 2. Hydra 2021
-  - [Part 1](https://youtu.be/YNtUK9GK4pA?si=c79cbHnFhF5NYPa0)
-  - [Part 2](https://youtu.be/EW7mkAOErWw?si=v6esbKpF0nzD-nVg)
-- ["Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM" by Nikita Koval et al.: Paper. 2023](https://youtu.be/jZqkWfa11Js?si=ZpiOwVHnDJSczbz_)
-- KotlinConf 2023ワークショップ
-- JCStress
-- kotlinx.coroutinesにおけるLincheckテストの実例
-- IntelliJ IDEAトレースデバッガのドキュメント
+テストしたい操作に `@Operation` を付けるだけでよい。
+シナリオは書かない。
 
-<!-- TODO: 各項目のURLを追加する -->
+```kotlin
+class UnsafeCounter {
+    private var value = 0
+    fun inc() {
+        value++
+    }
+    fun get(): Int = value
+}
+
+class UnsafeCounterTest {
+    private val counter = UnsafeCounter()
+
+    @Operation
+    fun inc() = counter.inc()
+
+    @Operation
+    fun get(): Int = counter.get()
+
+    @Test
+    fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
+
+    @Test
+    fun stressTest() = StressOptions().check(this::class)
+}
+```
+
+<!-- https://pl.kotl.in/azc9HV9il -->
+
+---
+
+<!-- {"layout": "content"} -->
+
+# 残りは全部Lincheckがやる
+
+宣言した操作からLincheckがテストを行う。<br>
+
+1. シナリオ生成：操作の並行な組み合わせを自動生成
+2. 実行：モデル検査またはストレステストで探索
+3. 判定：線形化可能かをチェック<br>
+
+「どう探索し、どう判定するか」はフレームワークの仕事。
+開発者は「何をテストするか」だけを書けばよい。
+
+---
+
+<!-- {"layout": "content"} -->
+
+# Prompt cancellation に対応
+
+対応してるよー
+
+<!-- https://kotlinlang.org/docs/lincheck-operation-execution-options.html#prompt-cancellation -->
