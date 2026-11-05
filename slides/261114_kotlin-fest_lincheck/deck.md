@@ -454,11 +454,13 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content", "freeze": false} -->
 
-# 線形化可能性
+# 線形化可能性による正しさチェック
 
-並行に実行した操作が、何らかの順序で1つずつ逐次実行した結果と一致すること。<br>
+並行実行した操作が、実行順序（実時刻の前後関係）を保ったまま、
+1つずつ逐次実行した結果のどれかと一致することが
+確認できればOK。<br>
 
 先ほどのカウンターの例で言うと、`counter++` と `counter++` を
 並行に呼んだとき「1つ目→2つ目」,「2つ目→1つ目」の
@@ -466,6 +468,8 @@ fun stressTest() = StressOptions().check(this::class)
 
 結果が1になる実行は、どんな順序の逐次実行とも一致しない。
 よって、線形化可能性を満たしておらず、不具合と判断する。
+
+![timeline](images/counter_linearizability_timeline.png)
 
 <!-- https://dl.acm.org/doi/10.1145/41625.41627 -->
 
@@ -507,7 +511,7 @@ Dual Data Structures理論に基づき、
 サスペンドする操作を別の視点で捉える。<br>
 
 操作を以下の通り分解。
-- 要求の登録（requeset）
+- 要求の登録（request）
 - 再開・完了（follow-up）<br>
 
 本分離により逐次実行の結果と
@@ -554,13 +558,11 @@ end
 # 参考資料
 
 - JetBrains. ["Overview"](https://kotlinlang.org/docs/lincheck-guide.html). Kotlin Documentation. 出版年不明, (参照 2026-11-03).
-- JetBrains. ["Model checking"](https://kotlinlang.org/docs/lincheck-model-checking.html#bounded-exploration). Kotlin Documentation. 出版年不明, (参照 2026-11-03).
 - Nikita Koval. ["How we test concurrent algorithms in Kotlin Coroutines by Nikita Koval"](https://www.youtube.com/watch?v=jZqkWfa11Js). YouTube (Kotlin by JetBrains). 2023, (参照 2026-11-03).
 - Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 1)"](https://www.youtube.com/watch?v=YNtUK9GK4pA). YouTube (Hydra). 2021, (参照 2026-11-03).
 - Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 2)"](https://www.youtube.com/watch?v=EW7mkAOErWw). YouTube (Hydra). 2021, (参照 2026-11-03).
 - Nikita Koval, et al. "Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM". Computer Aided Verification (CAV 2023) Part I. Lecture Notes in Computer Science, vol.13964. Constantin Enea, Akash Lal編. Cham, Springer, 2023, p.156-169. DOI: [10.1007/978-3-031-37706-8_8](https://doi.org/10.1007/978-3-031-37706-8_8).
-- Maurice Herlihy, Jeannette Wing. Linearizability: A Correctness Condition for Concurrent Objects. ACM Transactions on Programming Languages and Systems. 1990, vol.12, no.3, p.463-492. DOI: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972).
-- JetBrains. ["Lincheck"](https://plugins.jetbrains.com/plugin/24171-lincheck). JetBrains Marketplace. 2025, (参照 2026-11-03).
+- Maurice P. Herlihy, Jeannette M. Wing. Linearizability: A Correctness Condition for Concurrent Objects. ACM Transactions on Programming Languages and Systems. 1990, vol.12, no.3, p.463-492. DOI: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972).
 
 ---
 

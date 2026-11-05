@@ -13,6 +13,9 @@
 - Lincheckは確実に不具合を見つけられるわけではない
   - model checkingは作成シナリオ数、stress testは試行回数をそれぞれ1回にすると、検知できるはずの不具合を検知できないことがある
   - 不具合を見逃すリスク（偽陰性）
+- Lincheckのiterationsとinvocationsの違いはなに？
+- EventStructureStrategyってのも追加されようとしてる
+  - https://github.com/JetBrains/lincheck/pull/1026
 
 # 参考文献入れるときの用のメモ
 
