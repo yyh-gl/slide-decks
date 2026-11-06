@@ -454,7 +454,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content", "freeze": false} -->
+<!-- {"layout": "content-with-comment", "freeze": false} -->
 
 # 線形化可能性による正しさチェック
 
@@ -462,16 +462,23 @@ fun stressTest() = StressOptions().check(this::class)
 1つずつ逐次実行した結果のどれかと一致することが
 確認できればOK。<br>
 
-先ほどのカウンターの例で言うと、`counter++` と `counter++` を
-並行に呼んだとき「1つ目→2つ目」,「2つ目→1つ目」の
-どちらの実行順序でも逐次実行なら結果は必ず2になる。<br>
+なお、並行実行では各操作に
+呼び出しから応答までの幅（実行区間）がある。
+線形化可能性では実行区間のどこか1点で
+瞬時に（atomically）実行されたとみなす。
 
-結果が1になる実行は、どんな順序の逐次実行とも一致しない。
-よって、線形化可能性を満たしておらず、不具合と判断する。
-
-![timeline](images/counter_linearizability_timeline.png)
+## 文章だけじゃわからん
 
 <!-- https://dl.acm.org/doi/10.1145/41625.41627 -->
+<!-- https://kotlinlang.org/docs/lincheck-results-validation.html#sequential-specification -->
+
+---
+
+<!-- {"layout": "content"} -->
+
+# カウンターのコードを例に説明
+
+![timeline](images/counter_linearizability_timeline.png)
 
 ---
 
