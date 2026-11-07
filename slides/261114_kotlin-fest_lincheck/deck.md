@@ -256,7 +256,7 @@ Thread 2が同じ処理を行うと
 スレッドの切り替わり方（インターリービング）が違うことにより
 結果が変わる。<br>
 
-たくさんの可能性の中から毎回1つだけが実行されるので
+テストでは、たくさんの可能性の中から毎回1つだけが実行されるので
 成功するか失敗するかは運任せになる。
 
 ## そして、我々は ”祈る”
@@ -283,7 +283,7 @@ Thread 2が同じ処理を行うと
 
 <!-- {"layout": "content-and-conclusion"} -->
 
-# テストで見つけるのも難しい
+# テストで見つけるのは難しい
 
 通常のテストは1回の実行につき、
 無数にある順序のうちの1つしか試せない。<br>
@@ -401,7 +401,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content-and-conclusion"} -->
+<!-- {"layout": "content-and-conclusion", "freeze": true} -->
 
 # 探索は証明ではない
 
@@ -454,7 +454,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content-with-comment", "freeze": false} -->
+<!-- {"layout": "content-with-comment"} -->
 
 # 線形化可能性による正しさチェック
 
@@ -478,6 +478,26 @@ fun stressTest() = StressOptions().check(this::class)
 
 # カウンターのコードを例に説明
 
+`counter` の値が1になるときと、2になるときがあった。
+
+```kotlin
+var counter = 0
+
+fun main() {
+    val t1 = thread { repeat(10_000) { counter++ } }
+    val t2 = thread { repeat(10_000) { counter++ } }
+    t1.join()
+    t2.join()
+    println(counter)
+}
+```
+
+---
+
+<!-- {"layout": "content"} -->
+
+# カウンターのコードを例に説明
+
 ![timeline](images/counter_linearizability_timeline.png)
 
 ---
@@ -490,9 +510,9 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content""} -->
 
-# suspendする関数のテストはどうなる？
+# suspendする関数のテストは難しいの？
 
 例として、`Channel` の `send` と `receive` を見てみる。<br>
 
@@ -510,7 +530,7 @@ channel.receive() // wait forever ...
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content","freeze": false} -->
 
 # Lincheckのアプローチ
 
@@ -531,9 +551,11 @@ Dual Data Structures理論に基づき、
 
 ---
 
-<!-- {"layout": "section"} -->
+<!-- {"layout": "section", "freeze": false} -->
 
-# 7. まとめ
+# 7. ここまでの内容を振り返る
+
+## では、最後に…
 
 ---
 
@@ -589,98 +611,6 @@ end
 
 ---
 
-<!-- {"layout": "content", "skip": true} -->
-
-# 導入手順の詳細
-
-<!-- TODO: Gradle依存追加の全量、JVM起動フラグの要否、JUnit 4/5どちらで動くかを実物で検証して記載する -->
-
----
-
-<!-- {"layout": "content", "skip": true} -->
-
-# モデル検査の仕組み：スイッチポイントを差し込む
-
-バイトコードを書き換えて、共有変数の読み書きやロックなど
-コンテキストスイッチが起こりうる箇所に「スイッチポイント」を挿入する。<br>
-
-- Lincheck自身のスケジューラが、どのスイッチポイントで
-  どのスレッドへ切り替えるかを決める
-- コンテキストスイッチの数が少ない順に優先して探索する
-  （多くの不具合は少ない切り替えで再現するため）
-- スケジュールを自分で制御しているからこそ、
-  壊れた順序をそのまま再生できる
-
-<!-- TODO: バイトコード書き換え・スイッチポイントの実装詳細を公式Docs/論文で検証する -->
-
----
-
-<!-- {"layout": "content", "skip": true} -->
-
-# Lincheckの注意点・制約
-
-- モデル検査が前提とするメモリモデルの制約。だからこそストレステストとの併用が推奨される
-- 実行時間：探索するため、通常のユニットテストより時間がかかる
-- I/Oや外部リソースを含むコードは、そのままでは対象にしにくい
-- 偽陰性のリスク：探索範囲（iterations/invocations）を小さくすると不具合を見逃す。
-  CIの実行時間とのトレードオフになる
-
-<!-- TODO: メモリモデル前提の最新状況、CIでのinvocations数調整の実践例を検証して記載する -->
-
----
-
-<!-- {"layout": "section", "skip": true} -->
-
-# 「正しさ」の判定方法の違い
-
-## JCStressとLincheckから見る
-
----
-
-<!-- {"layout": "content", "skip": true} -->
-
-# JCStress：結果を列挙する
-
-Lincheckと同様の並行処理テストツールであるJCStressでは、
-起こりうる実行結果のパターンを1つずつ列挙することで、
-正しさの基準を表現する。
-
-```java
-// JCStress: 許容する結果を列挙して表現する
-@Outcome(id = "1, 1", expect = FORBIDDEN,  desc = "ロストアップデート")
-@Outcome(id = "1, 2", expect = ACCEPTABLE, desc = "Thread1が先")
-@Outcome(id = "2, 1", expect = ACCEPTABLE, desc = "Thread2が先")
-```
-
----
-
-<!-- {"layout": "content-and-conclusion", "skip": true} -->
-
-# Lincheck：仕様で判定する
-
-Lincheckは、対象クラスを1スレッドで動かした結果、
-つまり逐次仕様（sequential specification）との等価性で
-正しさを判定する。<br>
-
-結果のパターンを列挙する代わりに、
-「1スレッドで動かせば何が起きるか」という仕様そのものを基準にする。
-
-## 正しさは「列挙」ではなく「仕様」で語る（todo:変える）
-
----
-
-<!-- {"layout": "content", "skip": true} -->
-
-<!-- TODO: 対応する一貫性モデルの最新状況を検証して記載する -->
-
-# 線形化可能性、もう少しだけ
-
-- Herlihy & Wing（1990）による原典
-- dual data structures（Scherer & Scott）
-- Lincheckが対応する一貫性モデル
-
----
-
 <!-- {"layout": "section"} -->
 
 # Lincheckの使い方
@@ -692,7 +622,7 @@ Lincheckは、対象クラスを1スレッドで動かした結果、
 # テスト対象を宣言
 
 テストしたい操作に `@Operation` を付けるだけでよい。
-シナリオは書かない。
+シナリオは（基本的に）書かなくてよい。
 
 ```kotlin
 class UnsafeCounter {
@@ -730,7 +660,7 @@ class UnsafeCounterTest {
 
 宣言した操作からLincheckがテストを行う。<br>
 
-1. シナリオ生成：操作の並行な組み合わせを自動生成
+1. シナリオ生成：複数スレッドでの様々な実行順序を自動生成
 2. 実行：モデル検査またはストレステストで探索
 3. 判定：線形化可能かをチェック<br>
 
@@ -739,10 +669,55 @@ class UnsafeCounterTest {
 
 ---
 
+<!-- {"layout": "section"} -->
+
+# Lincheckによるスレッド制御
+
+---
+
+<!-- {"layout": "content"} -->
+
+# モデル検査の仕組み：スイッチポイントを差し込む
+
+バイトコードを書き換えて、共有変数の読み書きやロックなど
+コンテキストスイッチが起こりうる箇所に「スイッチポイント」を
+挿入する。<br>
+
+- Lincheck自身のスケジューラが、どのスイッチポイントで
+  どのスレッドへ切り替えるかを決める
+- スケジュールを自分で制御しているからこそ、
+  壊れた順序をそのまま再生できる
+
+<!-- https://doi.org/10.1007/978-3-031-37706-8_8 -->
+<!-- https://www.youtube.com/watch?v=YNtUK9GK4pA -->
+
+---
+
+<!-- {"layout": "section"} -->
+
+# その他
+
+---
+
+<!-- {"layout": "content"} -->
+
+# Lincheckの注意点・制約
+
+- モデル検査
+  - 前提とするメモリモデルの制約
+  - ファイルやソケットなどのI/O呼び出しに非対応
+- 実行時間：探索するため、通常のユニットテストより時間がかかる
+- 偽陰性のリスク：探索範囲（iterations/invocations）を小さくすると不具合を見逃す
+  - CIの実行時間とのトレードオフになる
+
+<!-- https://kotlinlang.org/docs/lincheck-model-checking.html#i-o-api-calls -->
+
+---
+
 <!-- {"layout": "content"} -->
 
 # Prompt cancellation に対応
 
-対応してるよー
+対応してるよー<br>
 
-<!-- https://kotlinlang.org/docs/lincheck-operation-execution-options.html#prompt-cancellation -->
+https://kotlinlang.org/docs/lincheck-operation-execution-options.html#prompt-cancellation
