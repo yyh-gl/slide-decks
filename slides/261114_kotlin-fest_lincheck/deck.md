@@ -56,7 +56,7 @@ LINE Digital Frontier株式会社
 
 # LINE Digital Frontier株式会社
 
-3つのサービスを運営中。
+本に関するサービスを複数運営中。
 私は主に『LINEマンガ』を開発しています📚️
 
 <!-- https://ldfcorp.com/ -->
@@ -163,7 +163,7 @@ fun main() {
 - とりあえずrerunしたら通った（ので後日確認します）<br>
 
 並行処理の不具合は「必ず再現するわけではない」という点で
-通常の不具合と性質が根本的に異なる。
+他の不具合と性質が根本的に異なる。
 私たちはその検証を諦め、テストの成功を祈ることがある。
 
 ## 祈るテスト ＝ テストの成否が運任せ
@@ -285,7 +285,7 @@ Thread 2が同じ処理を行うと
 
 # テストで見つけるのは難しい
 
-通常のテストは1回の実行につき、
+テストは1回の実行につき、
 無数にある順序のうちの1つしか試せない。<br>
 
 不具合を踏む順序を引き当てるかどうかは運次第。<br>
@@ -472,7 +472,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ## 文章だけじゃわからん
 
-<!-- https://dl.acm.org/doi/10.1145/41625.41627 -->
+<!-- https://doi.org/10.1145/78969.78972 -->
 <!-- https://kotlinlang.org/docs/lincheck-results-validation.html#sequential-specification -->
 
 ---
@@ -481,27 +481,57 @@ fun stressTest() = StressOptions().check(this::class)
 
 # カウンターのコードを例に説明
 
-`counter` の値が1になるときと、2になるときがあった。
+実行すると `counter` の値が2になるときと、1になるときがある。
 
 ```kotlin
 var counter = 0
 
 fun main() {
-    val t1 = thread { repeat(10_000) { counter++ } }
-    val t2 = thread { repeat(10_000) { counter++ } }
+    val t1 = thread { counter++ }
+    val t2 = thread { counter++ }
     t1.join()
     t2.join()
     println(counter)
 }
 ```
 
+<!-- https://pl.kotl.in/a-giAjv7v -->
+
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content-and-conclusion"} -->
 
-# カウンターのコードを例に説明
+# まず逐次実行に見立てる
 
-![timeline](images/counter_linearizability_timeline.png)
+(a)
+1つ目の `counter++` が先に実行され、
+続いて、2つ目の `counter++` が
+実行される。<br>
+
+(b)
+2つ目の `counter++` が先に実行され、
+続いて、1つ目の `counter++` が
+実行される。
+
+## 逐次実行であれば、`counter` は必ず2になる
+
+![timeline](images/linearizability_counter2.png)
+
+---
+
+<!-- {"layout": "content-and-conclusion"} -->
+
+# 逐次実行結果と同じ結果が得られるか確認
+
+コードを実行したとき `counter` の値は2または1になった。<br>
+
+`counter` が
+- 2になる逐次実行は**存在する**
+- 1になる逐次実行は**存在しない**
+
+## `counter` が1になるケースは線形化不可なので正しくない
+
+![timeline](images/linearizability_counter1.png)
 
 ---
 
@@ -513,7 +543,7 @@ fun main() {
 
 ---
 
-<!-- {"layout": "content""} -->
+<!-- {"layout": "content"} -->
 
 # suspendする関数のテストは難しいの？
 
@@ -533,7 +563,7 @@ channel.receive() // wait forever ...
 
 ---
 
-<!-- {"layout": "content","freeze": false} -->
+<!-- {"layout": "content"} -->
 
 # Lincheckのアプローチ
 
@@ -554,7 +584,7 @@ Dual Data Structures理論に基づき、
 
 ---
 
-<!-- {"layout": "section", "freeze": false} -->
+<!-- {"layout": "section"} -->
 
 # 7. ここまでの内容を振り返る
 
