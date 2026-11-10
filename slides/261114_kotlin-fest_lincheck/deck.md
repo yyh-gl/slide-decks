@@ -461,77 +461,112 @@ fun stressTest() = StressOptions().check(this::class)
 
 # 線形化可能性による正しさチェック
 
-並行実行した操作が、実行順序（実時刻の前後関係）を保ったまま、
-1つずつ逐次実行した結果のどれかと一致することが
-確認できればOK。<br>
+ざっくり言うと、実行順序（実時刻の前後関係）を守りつつ、
+並行実行と同じ結果を再現できる
+逐次実行方法があるかをチェックする。<br>
 
-なお、並行実行では各操作に
-呼び出しから応答までの幅（実行区間）がある。
-線形化可能性では実行区間のどこか1点で
-瞬時に（atomically）実行されたとみなす。
+厳密な話をすると、<br>
+
+「並行実行では各操作に呼び出しから
+応答までの幅（実行区間）がある」ことや、
+「操作は実行区間内で瞬時に実行されたように
+見えるポイント（線形化ポイント）がある」<br>
+
+…などの話がある。ここでは雰囲気だけ掴んでおけばOK。
 
 ## 文章だけじゃわからん
 
 <!-- https://doi.org/10.1145/78969.78972 -->
 <!-- https://kotlinlang.org/docs/lincheck-results-validation.html#sequential-specification -->
+<!-- 便宜上「実行区間」というワードを用いている -->
 
 ---
 
 <!-- {"layout": "content"} -->
 
-# カウンターのコードを例に説明
+# コードを例に説明
 
-実行すると `counter` の値が2になるときと、1になるときがある。
+実行すると `(r1, r2)` の値は
+以下のいずれかになる。<br>
+- `(1, 2)`　
+- `(2, 1)`　
+- `(1, 1)`<br>
+
+このような結果をもたらす
+逐次実行方法があるかを見る。
 
 ```kotlin
 var counter = 0
 
+fun inc(): Int = ++counter
+
 fun main() {
-    val t1 = thread { counter++ }
-    val t2 = thread { counter++ }
+    var r1 = 0
+    var r2 = 0
+    val t1 = thread { r1 = inc() }
+    val t2 = thread { r2 = inc() }
     t1.join()
     t2.join()
-    println(counter)
+    println("$r1, $r2")
 }
 ```
 
-<!-- https://pl.kotl.in/a-giAjv7v -->
+<!-- https://pl.kotl.in/74JCQog_G -->
 
 ---
 
-<!-- {"layout": "content-and-conclusion"} -->
+<!-- {"layout": "content"} -->
 
-# まず逐次実行に見立てる
+# どんな逐次実行があるかチェック
 
 (a)
-1つ目の `counter++` が先に実行され、
-続いて、2つ目の `counter++` が
+1つ目の `inc()` が先に実行され、
+続いて、2つ目の `inc()` が
 実行される。<br>
 
 (b)
-2つ目の `counter++` が先に実行され、
-続いて、1つ目の `counter++` が
-実行される。
+2つ目の `inc()` が先に実行され、
+続いて、1つ目の `inc()` が
+実行される。<br>
 
-## 逐次実行であれば、`counter` は必ず2になる
+この2通りが存在。
+（これがすべて）
 
-![timeline](images/linearizability_counter2.png)
+![timeline](images/linearizability_counter.png)
 
 ---
 
 <!-- {"layout": "content-and-conclusion"} -->
 
-# 逐次実行結果と同じ結果が得られるか確認
+# 逐次実行で再現可能かチェック
 
-コードを実行したとき `counter` の値は2または1になった。<br>
+並行処理を実行して得られる
+r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
-`counter` が
-- 2になる逐次実行は**存在する**
-- 1になる逐次実行は**存在しない**
+- `(1, 2)` は (a) の逐次実行で再現可能
+- `(2, 1)` は (b) の逐次実行で再現可能
+- **`(1, 1)` はどの逐次実行でも再現不可能**
 
-## `counter` が1になるケースは線形化不可なので正しくない
+![timeline](images/linearizability_counter.png)
 
-![timeline](images/linearizability_counter1.png)
+## Lincheckが不具合を検知！
+
+---
+
+<!-- {"layout": "content"} -->
+
+# 少しだけ補足
+
+線形化可能性は、最終的なデータの状態を見るのではなく、
+並行処理された各操作が逐次実行の履歴と
+整合するかをチェックする。<br>
+
+今回の例も、最終的な`counter`の値ではなく、
+各 `inc()` の動き（便宜上、`r1` と `r2` の値）に着目している。<br><br>
+
+ちなみに、Lincheckは最終状態のチェックもサポートしている。
+
+<!-- https://kotlinlang.org/docs/lincheck-results-validation.html#validation -->
 
 ---
 
@@ -744,6 +779,19 @@ class UnsafeCounterTest {
   - CIの実行時間とのトレードオフになる
 
 <!-- https://kotlinlang.org/docs/lincheck-model-checking.html#i-o-api-calls -->
+
+---
+
+<!-- {"layout": "content"} -->
+
+# 線形化可能性の補足
+
+- 並行システムの実行は履歴によってモデル化される
+  - 履歴とは、操作の呼び出しおよび応答イベントの
+    有限なシーケンスのこと
+- 実行区間が被らない操作同士は実行順序を必ず守る
+  - 実行区間が被る＝並行実行
+  - 実行区間が被らないなら、どちらが先に実行されたかは明確
 
 ---
 
