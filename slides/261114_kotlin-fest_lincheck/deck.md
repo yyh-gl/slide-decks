@@ -371,7 +371,8 @@ fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 # 戦略②：ストレステスト
 
 様々なテストシナリオを大量に実行し、
-多様な実行順序を引き当てにいく戦略（デフォルトで数万回規模）。
+多様な実行順序を引き当てにいく戦略。
+（デフォルトで100シナリオ×各1万回実行、最大100万回）
 → 試行回数を増やし、不具合を踏む確率を上げる。<br>
 
 - Lincheckによるスレッド制御はなく、<br>実環境に近い挙動を確認できる
@@ -584,17 +585,22 @@ r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
 例として、`Channel` の `send` と `receive` を見てみる。<br>
 
-Senderがいなければ `receive` はサスペンドする。
-これは不具合ではなく、仕様どおりの正しい挙動。<br> 
+`send` と `receive` を並行に実行すると両方とも成功する。<br>
 
-しかし、`receive` がずっとサスペンドすると、
-後続の処理が進まないため、逐次実行と等価な結果を得られない。
-つまり、線形化可能性を満たすかのチェックができない。
+しかし逐次実行すると、どちらを先に呼んでも
+相手がいないためサスペンドしたまま処理が進まない。
+つまり、並行実行の結果を再現できる逐次実行が存在せず、
+従来の線形化可能性では判定できない。
 
 ```kotlin
-val channel = Channel<Int>()
-channel.receive() // wait forever ...
+val channel = Channel<Int>(Channel.RENDEZVOUS)
+val t1 = thread { channel.send(1) }
+val t2 = thread { channel.receive() }
 ```
+
+<!-- RENDEZVOUS（capacity=0、デフォルト）はバッファを持たないため、
+     sendとreceiveが同時に揃ったときだけ値の受け渡しが成立する。
+     片方だけ呼ばれている間はサスペンドして待つ。 -->
 
 ---
 
@@ -728,8 +734,10 @@ class UnsafeCounterTest {
 
 宣言した操作からLincheckがテストを行う。<br>
 
-1. シナリオ生成：複数スレッドでの様々な実行順序を自動生成
-2. 実行：モデル検査またはストレステストで探索
+1. シナリオ生成：各スレッドで呼ぶ操作と引数の組み合わせを
+  　　　　　　　自動生成
+2. 実行：モデル検査またはストレステストで
+  　　　様々な実行順序（インターリービング）を探索
 3. 判定：線形化可能かをチェック<br>
 
 「どう探索し、どう判定するか」はフレームワークの仕事。
@@ -775,7 +783,8 @@ class UnsafeCounterTest {
   - 前提とするメモリモデルの制約
   - ファイルやソケットなどのI/O呼び出しに非対応
 - 実行時間：探索するため、通常のユニットテストより時間がかかる
-- 偽陰性のリスク：探索範囲（iterations/invocations）を小さくすると不具合を見逃す
+- 偽陰性のリスク：探索範囲（iterations/invocations）を
+  小さくすると不具合を見逃す
   - CIの実行時間とのトレードオフになる
 
 <!-- https://kotlinlang.org/docs/lincheck-model-checking.html#i-o-api-calls -->
