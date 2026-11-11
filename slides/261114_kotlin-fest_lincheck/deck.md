@@ -80,10 +80,8 @@ LINEマンガコインやEBJクーポンが当たる抽選会もやってます�
 
 1. 再現しない並行処理の不具合
 1. Lincheckを使った並行処理テスト
-1. suspend関数への適用
+1. suspend関数のテスト
 1. まとめ
-
-<!-- TODO: agenda確定したらデザイン変える -->
 
 ---
 
@@ -132,7 +130,7 @@ fun main() {
 
 ---
 
-<!-- {"layout": "content-with-comment"} -->
+<!-- {"layout": "content-with-comment", "freeze": true} -->
 
 # 実行してみると
 
@@ -263,7 +261,7 @@ Thread 2が同じ処理を行うと
 
 ---
 
-<!-- {"layout": "content-with-comment"} -->
+<!-- {"layout": "content-with-comment", "freeze": true} -->
 
 # 実行順序の組み合わせ爆発
 
@@ -297,9 +295,9 @@ Thread 2が同じ処理を行うと
 
 ---
 
-<!-- {"layout": "section"} -->
+<!-- {"layout": "section", "freeze": true} -->
 
-# 4. Lincheck
+# 2. Lincheckを使った並行処理テスト
 
 ---
 
@@ -349,7 +347,7 @@ Lincheckは2つの戦略でこれを実現する。<br>
 
 # 戦略①：モデル検査（Model checking）
 
-JVMのスケジューラに任せず、Lincheckがスレッドの切り替えを制御。
+実行環境のスケジューラに任せず、Lincheckがスレッドの切り替えを制御。
 本制御を通して系統的に探索する戦略。<br>
 
 - 運に頼らない
@@ -387,11 +385,11 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content"} -->
+<!-- {"layout": "content", "freeze": false} -->
 
 # 2つの戦略の使い分け
 
-モデル検査とストレステストの併用がおすすめ。
+モデル検査を主軸に、ストレステストの併用を推奨。
 
 |                | モデル検査                         | ストレステスト             |
 | -------------- | ---------------------------------- | -------------------------- |
@@ -399,6 +397,8 @@ fun stressTest() = StressOptions().check(this::class)
 | 再現性         | 高い（決定的）                     | 低い（確率的）                       |
 | 失敗トレース   | あり                               | なし                       |
 | 向いている用途 | ロジックの<br>不具合検出・デバッグ | 実環境に近い挙動の確認 |
+
+<!-- https://doi.org/10.1007/978-3-031-37706-8_8 -->
 
 ---
 
@@ -419,6 +419,9 @@ fun stressTest() = StressOptions().check(this::class)
 ## 不具合を検知できない可能性（偽陰性）がある
 
 <!-- https://kotlinlang.org/docs/lincheck-model-checking.html#relaxed-java-memory-model -->
+<!-- 「特性上、検知できない不具合もある」の例
+     モデル検査は逐次一貫性を前提とするため、
+     メモリモデル起因の不具合（volatile付け忘れなど）は検知できない -->
 
 ---
 
@@ -458,7 +461,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content-with-comment"} -->
+<!-- {"layout": "content-with-comment", "freeze": true} -->
 
 # 線形化可能性による正しさチェック
 
@@ -573,7 +576,7 @@ r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
 <!-- {"layout": "section"} -->
 
-# 5. suspend関数のテスト
+# 3. suspend関数のテスト
 
 ## Kotlinと言えばCoroutines、Coroutinesと言えばsuspend
 
@@ -581,7 +584,7 @@ r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
 <!-- {"layout": "content"} -->
 
-# suspendする関数のテストは難しいの？
+# suspendする関数のテストは難しい？
 
 例として、`Channel` の `send` と `receive` を見てみる。<br>
 
@@ -594,8 +597,10 @@ r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
 ```kotlin
 val channel = Channel<Int>(Channel.RENDEZVOUS)
-val t1 = thread { channel.send(1) }
-val t2 = thread { channel.receive() }
+runBlocking {
+    launch { channel.send(1) }
+    launch { channel.receive() }
+}
 ```
 
 <!-- RENDEZVOUS（capacity=0、デフォルト）はバッファを持たないため、
@@ -627,7 +632,7 @@ Dual Data Structures理論に基づき、
 
 <!-- {"layout": "section"} -->
 
-# 7. ここまでの内容を振り返る
+# 4. まとめ
 
 ## では、最後に…
 
@@ -635,7 +640,7 @@ Dual Data Structures理論に基づき、
 
 <!-- {"layout": "content-and-conclusion"} -->
 
-# 本日の振り返り
+# まとめ
 
 - 並行処理の不具合は**再現しにくい**
   - 原因は実行順序の組み合わせ爆発
@@ -665,7 +670,8 @@ end
 - Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 1)"](https://www.youtube.com/watch?v=YNtUK9GK4pA). YouTube (Hydra). 2021, (参照 2026-11-03).
 - Maria Sokolova. ["Workshop. Lincheck: Testing concurrency on the JVM (Part 2)"](https://www.youtube.com/watch?v=EW7mkAOErWw). YouTube (Hydra). 2021, (参照 2026-11-03).
 - Nikita Koval, et al. "Lincheck: A Practical Framework for Testing Concurrent Data Structures on JVM". Computer Aided Verification (CAV 2023) Part I. Lecture Notes in Computer Science, vol.13964. Constantin Enea, Akash Lal編. Cham, Springer, 2023, p.156-169. DOI: [10.1007/978-3-031-37706-8_8](https://doi.org/10.1007/978-3-031-37706-8_8).
-- Maurice P. Herlihy, Jeannette M. Wing. Linearizability: A Correctness Condition for Concurrent Objects. ACM Transactions on Programming Languages and Systems. 1990, vol.12, no.3, p.463-492. DOI: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972).
+- Maurice P. Herlihy, Jeannette M. Wing. "Linearizability: A Correctness Condition for Concurrent Objects". ACM Transactions on Programming Languages and Systems. 1990, vol.12, no.3, p.463-492. DOI: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972).
+- William N. Scherer III, Michael L. Scott. "Nonblocking Concurrent Data Structures with Condition Synchronization". Distributed Computing (DISC 2004). Lecture Notes in Computer Science, vol.3274. Rachid Guerraoui編. Berlin, Heidelberg, Springer, 2004, p.174-187. DOI: [10.1007/978-3-540-30186-8_13](https://doi.org/10.1007/978-3-540-30186-8_13).
 
 ---
 
@@ -756,7 +762,7 @@ class UnsafeCounterTest {
 # モデル検査の仕組み：スイッチポイントを差し込む
 
 バイトコードを書き換えて、共有変数の読み書きやロックなど
-コンテキストスイッチが起こりうる箇所に「スイッチポイント」を
+他スレッドとの干渉が起こりうる箇所に「スイッチポイント」を
 挿入する。<br>
 
 - Lincheck自身のスケジューラが、どのスイッチポイントで
