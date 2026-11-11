@@ -400,6 +400,7 @@ fun stressTest() = StressOptions().check(this::class)
 | 失敗トレース   | あり                               | なし                       |
 | 向いている用途 | ロジックの<br>不具合検出・デバッグ | 実環境に近い挙動の確認 |
 
+<!-- 両者の根本的な違いは、スレッド切り替え（インターリーブ）の制御方法 -->
 <!-- https://doi.org/10.1007/978-3-031-37706-8_8 -->
 <!-- https://kotlinlang.org/docs/lincheck-testing-strategies.html#choose-a-strategy -->
 
