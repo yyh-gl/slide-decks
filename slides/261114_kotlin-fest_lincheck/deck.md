@@ -405,31 +405,28 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content-and-conclusion"} -->
+<!-- {"layout": "content-and-conclusion", "freeze": true} -->
 
 # 探索は証明ではない
 
 モデル検査もストレステストも、探索には限りがある。<br>
 
 - モデル検査
+  - 探索には上限があり、全順序を網羅できるわけではない
   - 特性上、検知できない不具合がある
     - 逐次一貫性のあるメモリモデルを前提としており、
       そのモデルの範囲外の不具合 など
 - ストレステスト
-  - 確率的な探索であり、試行回数が少なければ<br>不具合を引き当てられない
-    - 試行回数が多くても不具合を踏む確率は100%ではない
+  - 確率的な探索であり、十分な試行回数がなければ<br>不具合を引き当てられない
 
 
 ## 不具合を検知できない可能性（偽陰性）がある
 
 <!-- https://kotlinlang.org/docs/lincheck-model-checking.html#relaxed-java-memory-model -->
-<!-- 「特性上、検知できない不具合もある」の例
-     モデル検査は逐次一貫性を前提とするため、
-     メモリモデル起因の不具合（volatile付け忘れなど）は検知できない -->
 
 ---
 
-<!-- {"layout": "content-and-conclusion", "freeze": false} -->
+<!-- {"layout": "content-and-conclusion"} -->
 
 # だから、「不要」というわけではない
 
