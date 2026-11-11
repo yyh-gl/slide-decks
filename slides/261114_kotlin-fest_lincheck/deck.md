@@ -313,7 +313,7 @@ JetBrains製の並行処理テストフレームワーク。<br>
 - 著名な並行処理関連のライブラリ（JCTools）にて
   不具合を発見した実績がある
 
-## coroutinesの品質を影で支えているツール
+## Coroutinesの品質を陰で支えているツール
 
 <!-- https://github.com/JetBrains/lincheck -->
 <!-- https://github.com/Kotlin/kotlinx.coroutines/tree/master/kotlinx-coroutines-core/jvm/test/lincheck -->
@@ -367,14 +367,15 @@ fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 
 <!-- {"layout": "content"} -->
 
-# 戦略②：ストレステスト
+# 戦略②：ストレステスト（Stress testing）
 
 様々なテストシナリオを大量に実行し、
-多様な実行順序を引き当てにいく戦略。
-（デフォルトで100シナリオ×各1万回実行、最大100万回）
-→ 試行回数を増やし、不具合を踏む確率を上げる。<br>
+多様な実行順序を引き当てにいく戦略。<br>
 
-- Lincheckによるスレッド制御はなく、<br>実環境に近い挙動を確認できる
+- Lincheckによるスレッド制御はなく、
+  実環境に近い挙動を確認できる
+- モデル検査と比較して、
+  実行スピードが速いので同一時間あたりの試行回数を増やせる
 - 確率的な探索であり、網羅性および再現性は保証されない
 
 ```kotlin
@@ -394,24 +395,26 @@ fun stressTest() = StressOptions().check(this::class)
 
 |                | モデル検査                         | ストレステスト             |
 | -------------- | ---------------------------------- | -------------------------- |
-| 探索方法       | 順序を制御して<br>系統的に探索     | 大量実行         |
+| 探索方法       | 順序を制御して<br>系統的に探索     | 大量に実行して<br>確率的に探索 |
 | 再現性         | 高い（決定的）                     | 低い（確率的）                       |
 | 失敗トレース   | あり                               | なし                       |
 | 向いている用途 | ロジックの<br>不具合検出・デバッグ | 実環境に近い挙動の確認 |
 
 <!-- https://doi.org/10.1007/978-3-031-37706-8_8 -->
+<!-- https://kotlinlang.org/docs/lincheck-testing-strategies.html#choose-a-strategy -->
 
 ---
 
-<!-- {"layout": "content-and-conclusion", "freeze": true} -->
+<!-- {"layout": "content-and-conclusion"} -->
 
 # 探索は証明ではない
 
 モデル検査もストレステストも、探索には限りがある。<br>
 
 - モデル検査
-  - 探索する実行順序数に上限がある
-  - 特性上、検知できない不具合もある
+  - 特性上、検知できない不具合がある
+    - 逐次一貫性のあるメモリモデルを前提としており、
+      そのモデルの範囲外の不具合 など
 - ストレステスト
   - 確率的な探索であり、試行回数が少なければ<br>不具合を引き当てられない
     - 試行回数が多くても不具合を踏む確率は100%ではない
@@ -426,7 +429,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ---
 
-<!-- {"layout": "content-and-conclusion"} -->
+<!-- {"layout": "content-and-conclusion", "freeze": false} -->
 
 # だから、「不要」というわけではない
 
@@ -435,7 +438,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 モデル検査は一度検知した不具合を確実に再現できる。<br>
 
-試行回数を増やすせば検知できる可能性は上がる。
+シナリオ数および試行回数を増やせば検知できる可能性は上がる。
 ※ 実行時間とのトレードオフ
 
 ## 「祈る」を「探索」に。これが大きなメリット
@@ -493,9 +496,11 @@ fun stressTest() = StressOptions().check(this::class)
 
 実行すると `(r1, r2)` の値は
 以下のいずれかになる。<br>
+
+- `(1, 1)`　
 - `(1, 2)`　
 - `(2, 1)`　
-- `(1, 1)`<br>
+- `(2, 2)`<br>
 
 このような結果をもたらす
 逐次実行方法があるかを見る。
@@ -517,6 +522,11 @@ fun main() {
 ```
 
 <!-- https://pl.kotl.in/74JCQog_G -->
+<!-- (2, 2)が起きる理由: ++counterはKotlinでは
+     「書き込み→counterを読み直して返す」というバイトコードになる
+     （getstatic → iconst_1 → iadd → putstatic → getstatic → ireturn）。
+     そのため両スレッドの書き込みが両方終わってから
+     両者が読み直すと、どちらも最終値の2を返しうる。 -->
 
 ---
 
@@ -545,12 +555,13 @@ fun main() {
 
 # 逐次実行で再現可能かチェック
 
-並行処理を実行時に得られる
+並行実行時に得られる
 r1とr2の値の組み合わせ `(r1, r2)` について<br>
 
 - `(1, 2)` は (a) の逐次実行で再現可能
 - `(2, 1)` は (b) の逐次実行で再現可能
-- **`(1, 1)` はどの逐次実行でも再現不可能**
+- **`(1, 1)` と `(2, 2)` は
+  どの逐次実行でも再現不可能**
 
 ![timeline](images/linearizability_counter.png)
 
