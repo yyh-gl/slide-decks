@@ -56,7 +56,7 @@ LINE Digital Frontier株式会社
 
 # LINE Digital Frontier株式会社
 
-本に関するサービスを複数運営中。
+「本」に関するサービスを複数運営中。
 私は主に『LINEマンガ』を開発しています📚️
 
 <!-- https://ldfcorp.com/ -->
@@ -69,7 +69,9 @@ LINE Digital Frontier株式会社
 
 アーキテクチャボードを掲示中。<br>
 
-LINEマンガコインやEBJクーポンが当たる抽選会もやってます🎁
+LINEマンガコインやebookjapanクーポンが
+当たる抽選会もやってます🎁<br>
+
 ぜひお立ち寄りください！
 
 ---
@@ -136,9 +138,9 @@ fun main() {
 
 同じコードなのに実行するたびに結果が異なる。<br>
 
-1回目: 20000
-2回目: 18756 ← ！？
-3回目: 20000<br>
+1回目: 20,000
+2回目: 18,756 ← ！？
+3回目: 20,000<br>
 
 並行処理ではあるあるな不具合。<br>
 
@@ -424,6 +426,7 @@ fun stressTest() = StressOptions().check(this::class)
 
 ## 不具合を検知できない可能性（偽陰性）がある
 
+<!-- モデル検査も時間がたくさんあるなら、試せる実行順序が増え、不具合検知しやすくなる -->
 <!-- https://kotlinlang.org/docs/lincheck-model-checking.html#relaxed-java-memory-model -->
 
 ---
