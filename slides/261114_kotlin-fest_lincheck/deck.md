@@ -766,6 +766,33 @@ class UnsafeCounterTest {
 
 ---
 
+!-- {"layout": "content"} -->
+
+# `runConcurrentTest`
+
+ブロックとその中で生成したスレッドの実行順序を探索し、
+最初に例外が発生した実行順序を見つける。<br>
+
+- `@Operation` の宣言は不要
+- 例外（`assertEquals` の失敗など）が発生した場合に
+  `LincheckAssertionError` を投げる
+
+```kotlin
+@Test
+fun test() = Lincheck.runConcurrentTest {
+    var counter = 0
+    val t1 = thread { counter++ }
+    val t2 = thread { counter++ }
+    t1.join()
+    t2.join()
+    assertEquals(2, counter)
+}
+```
+
+<!-- https://github.com/JetBrains/lincheck -->
+
+---
+
 <!-- {"layout": "section"} -->
 
 # Lincheckによるスレッド制御
