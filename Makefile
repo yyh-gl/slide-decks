@@ -10,3 +10,7 @@ help: ## helpを表示
 start: ## 作業環境を起動
 	deck open ./slides/${title}/deck.md
 	deck apply --watch ./slides/${title}/deck.md
+
+.PHONY: apply
+apply: ## deck.mdの変更を反映
+	deck apply ./slides/${title}/deck.md
